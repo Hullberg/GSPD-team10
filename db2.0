@@ -1,0 +1,59 @@
+CREATE TABLE `item` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  `itemname` VARCHAR(255) NOT NULL,
+  `xcoord` INTEGER NOT NULL,
+  `ycoord` INTEGER NOT NULL,
+  `temperature` DOUBLE NOT NULL,
+  `weight` DOUBLE NOT NULL,
+  `shape` VARCHAR(255) NOT NULL,
+  `color` VARCHAR(255) NOT NULL,
+  `itemtaken` BOOLEAN NOT NULL
+);
+
+CREATE TABLE `robot` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  `robotname` VARCHAR(255) NOT NULL,
+  `xcoord` INTEGER NOT NULL,
+  `ycoord` INTEGER NOT NULL,
+  `state` BOOLEAN NOT NULL,
+  `robottaken` BOOLEAN NOT NULL
+);
+
+CREATE TABLE `robot_item` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  `robotid` INTEGER NOT NULL,
+  `itemid` INTEGER NOT NULL,
+  `robot` INTEGER NOT NULL,
+  `item` INTEGER NOT NULL
+);
+
+CREATE INDEX `idx_robot_item__item` ON `robot_item` (`item`);
+
+CREATE INDEX `idx_robot_item__robot` ON `robot_item` (`robot`);
+
+ALTER TABLE `robot_item` ADD CONSTRAINT `fk_robot_item__item` FOREIGN KEY (`item`) REFERENCES `item` (`id`);
+
+ALTER TABLE `robot_item` ADD CONSTRAINT `fk_robot_item__robot` FOREIGN KEY (`robot`) REFERENCES `robot` (`id`);
+
+CREATE TABLE `slot` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  `xcoord` INTEGER NOT NULL,
+  `ycoord` INTEGER NOT NULL,
+  `slottaken` BOOLEAN NOT NULL
+);
+
+CREATE TABLE `item_slot` (
+  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  `itemid` INTEGER NOT NULL,
+  `slotid` INTEGER NOT NULL,
+  `slot` INTEGER NOT NULL,
+  `item` INTEGER NOT NULL
+);
+
+CREATE INDEX `idx_item_slot__item` ON `item_slot` (`item`);
+
+CREATE INDEX `idx_item_slot__slot` ON `item_slot` (`slot`);
+
+ALTER TABLE `item_slot` ADD CONSTRAINT `fk_item_slot__item` FOREIGN KEY (`item`) REFERENCES `item` (`id`);
+
+ALTER TABLE `item_slot` ADD CONSTRAINT `fk_item_slot__slot` FOREIGN KEY (`slot`) REFERENCES `slot` (`id`)
