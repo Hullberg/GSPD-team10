@@ -1,15 +1,30 @@
 import bluetooth
+import struct
 
 bd_addr = "00:16:53:52:1E:34" #EV3 robot address
 
 port = 1
 
 sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+
+
 sock.connect((bd_addr, port))
+connected = False
 
-sock.send(b'52') # send bytestream, possibly use packed struct instead
+# while not connected:
+#     try:
+#         sock.connect((bd_addr, port))
+#         connected = True
+#     except Exception as e:
+#         pass
 
-num =  int.from_bytes(sock.recv(1024), byteorder='big') # decode bytestream from robot
+
+
+sock.send(struct.pack(">8s", "42,43,44")) # 8 is for the length of the string
+
+
+num = struct.unpack(">I", sock.recv(1024))[0]
+#int.from_bytes(sock.recv(1024), byteorder='big') # decode bytestream from robot
 
 print("the answer is " + str(num))
 

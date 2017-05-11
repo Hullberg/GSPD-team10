@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>lejosTests</name>
+	<name>lejosNXT</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -11,13 +11,13 @@
 			</arguments>
 		</buildCommand>
 		<buildCommand>
-			<name>org.lejos.ev3.ldt.leJOSEV3Builder</name>
+			<name>org.lejos.nxt.ldt.leJOSBuilder</name>
 			<arguments>
 			</arguments>
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>org.lejos.ev3.ldt.leJOSEV3Nature</nature>
+		<nature>org.lejos.nxt.ldt.leJOSNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
 </projectDescription>
