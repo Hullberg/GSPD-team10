@@ -1,17 +1,15 @@
 CREATE TABLE `item` (
   `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
   `itemname` VARCHAR(255) NOT NULL,
-  `xcoord` INTEGER NOT NULL,
-  `ycoord` INTEGER NOT NULL,
+  `xcoord` TINYINT NOT NULL,
+  `ycoord` TINYINT NOT NULL,
   `temperature` DOUBLE NOT NULL,
-  `weight` DOUBLE NOT NULL,
-  `shape` VARCHAR(255) NOT NULL,
-  `color` VARCHAR(255) NOT NULL,
+  `lightsensitivity` TINYINT NOT NULL,
   `itemtaken` BOOLEAN NOT NULL
 );
 
 CREATE TABLE `robot` (
-  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
+  `id` TINYINT PRIMARY KEY AUTO_INCREMENT,
   `robotname` VARCHAR(255) NOT NULL,
   `xcoord` INTEGER NOT NULL,
   `ycoord` INTEGER NOT NULL,
@@ -21,9 +19,9 @@ CREATE TABLE `robot` (
 
 CREATE TABLE `robot_item` (
   `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-  `robotid` INTEGER NOT NULL,
-  `itemid` INTEGER NOT NULL,
-  `robot` INTEGER NOT NULL,
+  `robotid` TINYINT NOT NULL,
+  `itemid` TINYINT NOT NULL,
+  `robot` TINYINT NOT NULL,
   `item` INTEGER NOT NULL
 );
 
@@ -36,17 +34,19 @@ ALTER TABLE `robot_item` ADD CONSTRAINT `fk_robot_item__item` FOREIGN KEY (`item
 ALTER TABLE `robot_item` ADD CONSTRAINT `fk_robot_item__robot` FOREIGN KEY (`robot`) REFERENCES `robot` (`id`);
 
 CREATE TABLE `slot` (
-  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-  `xcoord` INTEGER NOT NULL,
-  `ycoord` INTEGER NOT NULL,
-  `slottaken` BOOLEAN NOT NULL
+  `id` TINYINT PRIMARY KEY AUTO_INCREMENT,
+  `xcoord` TINYINT NOT NULL,
+  `ycoord` TINYINT NOT NULL,
+  `slottaken` BOOLEAN NOT NULL,
+  `lightsensitivity` INTEGER NOT NULL,
+  `temperature` DOUBLE NOT NULL
 );
 
 CREATE TABLE `item_slot` (
-  `id` INTEGER PRIMARY KEY AUTO_INCREMENT,
-  `itemid` INTEGER NOT NULL,
-  `slotid` INTEGER NOT NULL,
-  `slot` INTEGER NOT NULL,
+  `id` TINYINT PRIMARY KEY AUTO_INCREMENT,
+  `itemid` TINYINT NOT NULL,
+  `slotid` TINYINT NOT NULL,
+  `slot` TINYINT NOT NULL,
   `item` INTEGER NOT NULL
 );
 
