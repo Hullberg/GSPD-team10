@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-import bson
+#import bson
 
 
 client = MongoClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
@@ -89,7 +89,8 @@ def postDocument(coll,array):
 	else:
 		return "No valid collection"
 	resp = coll.insert_one(doc)
-	return resp.inserted_id, resp.raw_input
+	return resp.acknowledged
+
 
 # Replace the document that has oldDocID with the newArray.
 # Must contain the right amount of elements, robot 6, item 8, slot 6
@@ -121,17 +122,16 @@ def updateDocument(coll,oldDocID,newArray):
 			result = db.slot.replace_one(oldDoc, newDoc)
 	else:
 		return "No valid collection"
-	#coll.replace_one(oldDoc,newDoc)
-	return result
+	return result.acknowledged
 
-
-#doc = getDocument("slot",{"slotTaken":False})
-#print doc
-#8print doc[0]
-#print getDocument("slot", {"_id" : doc[0]})[0]
-#res = updateDocument("slot",doc[0],[175,125,False,755,20,""])
-#res = db.slot
-#print res.raw_result, res.acknowledged, res.modified_count
-#print db.slot.replace_one({"xCoord" : 75}, {"xCoord":125,"yCoord":125,"slotTaken":False,"lightSensitivity":755,"temperature":20,"itemID":""})
-
-#print updateDocument(slots,{"slotTaken":False},{"xCoord":75,"yCoord":125,"slotTaken":True})
+# Will delete document from collection. If result == 1, one entry has been deleted.
+def deleteDocument(coll,docID):
+	if coll == "robot":
+		res = db.robot.delete_one({ "_id" : docID })
+	elif coll == "item":
+		res = db.item.delete_one({ "_id" : docID})
+	elif coll == "slot":
+		res = db.slot.delete_one({ "_id" : docID })
+	else:
+		return "No valid collection"
+	return res.deleted_count
