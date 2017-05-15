@@ -15,102 +15,123 @@ slots = db.slot
 #post = {"xCoord" : 25, "yCoord" : 125, "slotTaken" : False}
 #post_id = slots.insert_one(post).inserted_id # Inserts post into slots, and id is stored to post_id.
 
-#print post_id
-
-# Inserts Document into Collection in Database. Returns ID of said document.
-def postDocument(coll,doc):
-	#coll = db.coll1
-	post = doc
-	resp = coll.insert_one(post)
-	return resp.inserted_id, resp.raw_input
+# Robot has 7 attributes
+# Item has 9 attributes
+# Slot has 7 attributes
 
 # A query, where the keyvaluepair is the equivalence to 'WHERE'-part in a SQL-command.
-# eg: keyvaluepair = '{"xCoord" : 25}'
-def getDocument(coll,keyvaluepair):
-	#coll = db.coll1
-	return coll.find_one(keyvaluepair)
+# eg: keyvaluepair = {"xCoord" : 25} -- Important, no quotation marks before/after {}
+# Will return an array, length depending on the collection. Look at drive-database-document to see structure
+def getDocument(coll,jsonquery):
+	if coll == "robot":
+		if jsonquery == "":
+			temp = db.robot.find_one()
+		else:
+			temp = db.robot.find_one(jsonquery)
+		
+		if temp != None:
+			resp = [temp['_id'], temp['robotName'], temp['xCoord'], temp['yCoord'], temp['state'], temp['robotTaken'], temp['itemID']]
+			return resp
+		else:
+			return "No such document"
 
-# Needs the old document, and replaces it with the new document.
-# Any document that matches with oldDoc will be replaced.
-# IMPORTANT: Must include all attributes in newDoc, or they will be lost.
-# Every document is a dictionary. To get an value of a document, use doc['value']
-# Example. doc['_id'] will return the _id-value.
-def updateDocument(coll,oldDoc,newDoc):
-	#coll = db.coll1
-	coll.replace_one(oldDoc,newDoc)
-	return newDoc
+	elif coll == "item":
+		if jsonquery == "":
+			temp = db.item.find_one()
+		else:
+			temp = db.item.find_one(jsonquery)
+
+		if temp != None:
+			
+			resp = [temp['_id'], temp['itemName'], temp['xCoord'], temp['yCoord'], temp['temperature'], temp['lightSensitivity'], temp['itemTaken'], temp['robotID'], temp['slotID']]
+			return resp
+		else:
+			return "No such document"
+
+	elif coll == "slot":
+		if jsonquery == "":
+			temp = db.slot.find_one()
+		else:
+			temp = db.slot.find_one(jsonquery)
+		
+		if temp != None:
+			resp = [temp['_id'], temp['xCoord'], temp['yCoord'], temp['slotTaken'], temp['lightSensitivity'], temp['temperature'], temp['itemID']]
+			return resp
+		else:
+			return "No such document"
+
+	else:
+		return "error, unknown collection"
 
 
-doc = getDocument(slots,{"slotTaken":True})
-print doc['_id']
-print updateDocument(slots,{"slotTaken":False},{"xCoord":75,"yCoord":125,"slotTaken":True})
+# Inserts Document into Collection in Database. 
+# Will return error if array is missing elements
+# Enter an array that contains the values wanted for the document.
+# IMPORTANT: _ID is set automatically, so only enter the other values.
+# Ex: [25,125,False,755,20,4234982341] (xCoord,yCoord,slotTaken,Light,Temp,itemID) for slot
+# Robot expects 6 values, item 8, slot 6.
+def postDocument(coll,array):
+	if coll == "robot":
+		if len(array) != 6:
+			return "Wrong number of values for Robot"
+		else:
+			doc = { "robotName" : array[0], "xCoord" : array[1], "yCoord" : array[2], "state" : array[3], "robotTaken" : array[4], "itemID" : array[5] }
+	elif coll == "item":
+		if len(array) != 8:
+			return "Wrong number of values for Item"
+		else:
+			doc = { "itemName" : array[0], "xCoord" : array[1], "yCoord" : array[2], "temperature" : array[3], "lightSensitivity" : array[4], "itemTaken" : array[5], "robotID" : array[6], "slotID" : array[7] }
+	elif coll == "slot":
+		if len(array) != 6:
+			return "Wrong number of values for Slot"
+		else:
+			doc = { "xCoord" : array[0], "yCoord" : array[1], "slotTaken" : array[2], "lightSensitivity" : array[3], "temperature" : array[4], "itemID" : array[5] }
+	else:
+		return "No valid collection"
+	resp = coll.insert_one(doc)
+	return resp.inserted_id, resp.raw_input
+
+# Replace the document that has oldDocID with the newArray.
+# Must contain the right amount of elements, robot 6, item 8, slot 6
+def updateDocument(coll,oldDocID,newArray):
+	if coll == "robot":
+		if len(newArray) != 6:
+			return "Wrong number of values for Robot"
+		else:
+			oldDocTemp = getDocument("robot", { "_id" : oldDocID })
+			oldDoc = { "robotName" : oldDocTemp[0], "xCoord" : oldDocTemp[1], "yCoord" : oldDocTemp[2], "state" : oldDocTemp[3], "robotTaken" : oldDocTemp[4], "robotID" : oldDocTemp[5] }
+			newDoc = { "robotName" : newArray[0], "xCoord" : newArray[1], "yCoord" : newArray[2], "state" : newArray[3], "robotTaken" : newArray[4], "robotID" : newArray[5] }
+			result = db.robot.replace_one(oldDoc, newDoc)
+	
+	elif coll == "item":
+		if len(newArray) != 8:
+			return "Wrong number of values for Item"
+		else:
+			oldDocTemp = getDocument("item", { "_id" : oldDocID })
+			oldDoc = { "itemName" : oldDocTemp[0], "xCoord" : oldDocTemp[1], "yCoord" : oldDocTemp[2], "temperature" : oldDocTemp[3], "lightSensitivity" : oldDocTemp[4], "itemTaken" : oldDocTemp[5], "robotID" : oldDocTemp[6], "slotID" : oldDocTemp[7] }
+			newDoc = { "itemName" : newArray[0], "xCoord" : newArray[1], "yCoord" : newArray[2], "temperature" : newArray[3], "lightSensitivity" : newArray[4], "itemTaken" : newArray[5], "robotID" : newArray[6], "slotID" : newArray[7] }
+			result = db.item.replace_one(oldDoc, newDoc)
+	elif coll == "slot":
+		if len(newArray) != 6:
+			return "Wrong number of values for Slot"
+		else:
+			oldDocTemp = getDocument("slot", { "_id" : oldDocID })
+			oldDoc = { "xCoord" : oldDocTemp[0], "yCoord" : oldDocTemp[1], "slotTaken" : oldDocTemp[2], "lightSensitivity" : oldDocTemp[3], "temperature" : oldDocTemp[4], "itemID" : oldDocTemp[5] }
+			newDoc = { "xCoord" : newArray[0], "yCoord" : newArray[1], "slotTaken" : newArray[2], "lightSensitivity" : newArray[3], "temperature" : newArray[4], "itemID" : newArray[5] }
+			result = db.slot.replace_one(oldDoc, newDoc)
+	else:
+		return "No valid collection"
+	#coll.replace_one(oldDoc,newDoc)
+	return result
 
 
-## Use mongoclient-driver instead of RestAPI below. Was easier, when I finally got the driver to work.
-#import httplib
-# def getDatabases(conn):
-# 	# Should get the databases linked to the account
-# 	conn.request("GET", "/api/1/databases?apiKey=_X9Ac2x8QqrXbCgQU4BkemKJi85wy21Z")
-# 	r = conn.getresponse()
-# 	print r.status, r.reason # Hopefully '200 OK'
-# 	data = r.read()
-# 	return data
+#doc = getDocument("slot",{"slotTaken":False})
+#print doc
+#8print doc[0]
+#print getDocument("slot", {"_id" : doc[0]})[0]
+#res = updateDocument("slot",doc[0],[175,125,False,755,20,""])
+#res = db.slot
+#print res.raw_result, res.acknowledged, res.modified_count
+#print db.slot.replace_one({"xCoord" : 75}, {"xCoord":125,"yCoord":125,"slotTaken":False,"lightSensitivity":755,"temperature":20,"itemID":""})
 
-# def getCollections(conn):
-# 	# Should retrieve all collections (tables) connected to the 'GSPD'-database
-# 	conn.request("GET", "/api/1/databases/gspd/collections?apiKey=_X9Ac2x8QqrXbCgQU4BkemKJi85wy21Z")
-# 	r = conn.getresponse()
-# 	print r.status, r.reason
-# 	data = r.read()
-# 	return data
-
-# def getDocuments(conn,collection,query):
-# 	# Should retrieve all documents (entries) in a collection (table), the 'query' works as 'WHERE'
-# 	if query == "":
-# 		string = "/api/1/databases/gspd/collections" + collection + "?apiKey=_X9Ac2x8QqrXbCgQU4BkemKJi85wy21Z"
-# 		conn.request("GET", string)
-# 	else:
-# 		# Example: SELECT * FROM item WHERE "itemName" : "golfball" (JSON-format)
-# 		# then the query is '"itemName" : "golfball"'
-# 		string = "/api/1/databases/gspd/collections" + collection + "?q={" + query + "}&apiKey=_X9Ac2x8QqrXbCgQU4BkemKJi85wy21Z"
-# 		conn.request("GET", string)
-# 	r = conn.getresponse()
-# 	print r.status, r.reason # Hopefully '200 OK'
-# 	data = r.read()
-# 	return data
-
-# def postDocument(conn,collection,JSON):
-# 	# Inserts a document (JSON) into the collection
-# 	# Example: postDocument(conn,"item",'{"itemName":"golfball","xCoord":"blah"....}')
-# 	post = "/api/1/databases/gspd/collections/" + collection + "?apiKey=_X9Ac2x8QqrXbCgQU4BkemKJi85wy21Z"
-# 	# request(POST,post,body,header)
-# 	conn.request("POST", post, JSON, {"Content-type" : "application/json"})
-# 	r = conn.getresponse()
-# 	print r.status, r.reason # Hopefully '200 OK'
-# 	data = r.read()
-# 	return data
-
-# def updateDocument(conn,collection,query,JSON):
-# 	# Updates a document, where the query decides which document to update. Example is query = '_id':3
-# 	post = "/api/1/databases/gspd/collections" + collection + "?apiKey=_X9Ac2x8QqrXbCgQU4BkemKJi85wy21Z&q={" + query + "}"
-# 	# The JSON could then be '{ "$set" : { "xCoord" : 25 , "yCoord" : 175 } }'
-# 	# If you wish to say move the item with id = 3 from a certain slot to (25,175)
-# 	conn.request("PUT", post, JSON, {"Content-type" : "application/json"})
-# 	r = conn.getresponse()
-# 	print r.status, r.reason # Hopefully '200 OK'
-# 	data = r.read()
-# 	return data
-
-# def deleteDocument(conn,collection,query,JSON):
-# 	# Removes a document from a collection. Query identifies the document.
-# 	post = "/api/1/databases/gspd/collections" + collection + "?apiKey=_X9Ac2x8QqrXbCgQU4BkemKJi85wy21Z&q={" + query + "}"
-# 	conn.request()
-
-# if __name__ == '__main__':
-# 	# Creates a connection to base URL path
-# 	conn = httplib.HTTPSConnection("api.mlab.com")
-
-# 	collections = getCollections(conn)
-# 	print collections
-
-# 	conn.close()
+#print updateDocument(slots,{"slotTaken":False},{"xCoord":75,"yCoord":125,"slotTaken":True})
