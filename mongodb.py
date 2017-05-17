@@ -16,7 +16,7 @@ slots = db.slot
 #post_id = slots.insert_one(post).inserted_id # Inserts post into slots, and id is stored to post_id.
 
 # Robot has 7 attributes
-# Item has 9 attributes
+# Item has 11 attributes
 # Slot has 7 attributes
 
 # A query, where the keyvaluepair is the equivalence to 'WHERE'-part in a SQL-command.
@@ -43,7 +43,7 @@ def getDocument(coll,jsonquery):
 
 		if temp != None:
 			
-			resp = [temp['_id'], temp['itemName'], temp['xCoord'], temp['yCoord'], temp['temperature'], temp['lightSensitivity'], temp['itemTaken'], temp['robotID'], temp['slotID']]
+			resp = [temp['_id'], temp['itemName'], temp['xCoord'], temp['yCoord'], temp['tempMin'], temp['tempMax'], temp['lightMin'], temp['lightMax'], temp['itemTaken'], temp['robotID'], temp['slotID']]
 			return resp
 		else:
 			return "No such document"
@@ -69,7 +69,7 @@ def getDocument(coll,jsonquery):
 # Enter an array that contains the values wanted for the document.
 # IMPORTANT: _ID is set automatically, so only enter the other values.
 # Ex: [25,125,False,755,20,4234982341] (xCoord,yCoord,slotTaken,Light,Temp,itemID) for slot
-# Robot expects 6 values, item 8, slot 6.
+# Robot expects 6 values, item 10, slot 6.
 def postDocument(coll,array):
 	if coll == "robot":
 		if len(array) != 6:
@@ -77,10 +77,10 @@ def postDocument(coll,array):
 		else:
 			doc = { "robotName" : array[0], "xCoord" : array[1], "yCoord" : array[2], "state" : array[3], "robotTaken" : array[4], "itemID" : array[5] }
 	elif coll == "item":
-		if len(array) != 8:
+		if len(array) != 10:
 			return "Wrong number of values for Item"
 		else:
-			doc = { "itemName" : array[0], "xCoord" : array[1], "yCoord" : array[2], "temperature" : array[3], "lightSensitivity" : array[4], "itemTaken" : array[5], "robotID" : array[6], "slotID" : array[7] }
+			doc = { "itemName" : array[0], "xCoord" : array[1], "yCoord" : array[2], "tempMin" : array[3], "tempMax" : array[4], "lightMin" : array[5], "lightMax" : array[6], "itemTaken" : array[7], "robotID" : array[8], "slotID" : array[9] }
 	elif coll == "slot":
 		if len(array) != 6:
 			return "Wrong number of values for Slot"
@@ -88,12 +88,12 @@ def postDocument(coll,array):
 			doc = { "xCoord" : array[0], "yCoord" : array[1], "slotTaken" : array[2], "lightSensitivity" : array[3], "temperature" : array[4], "itemID" : array[5] }
 	else:
 		return "No valid collection"
-	resp = coll.insert_one(doc)
-	return resp.acknowledged
+	resp_id = coll.insert_one(doc).inserted_id
+	return resp_id
 
 
 # Replace the document that has oldDocID with the newArray.
-# Must contain the right amount of elements, robot 6, item 8, slot 6
+# Must contain the right amount of elements, robot 6, item 10, slot 6
 def updateDocument(coll,oldDocID,newArray):
 	if coll == "robot":
 		if len(newArray) != 6:
@@ -105,12 +105,12 @@ def updateDocument(coll,oldDocID,newArray):
 			result = db.robot.replace_one(oldDoc, newDoc)
 	
 	elif coll == "item":
-		if len(newArray) != 8:
+		if len(newArray) != 10:
 			return "Wrong number of values for Item"
 		else:
 			oldDocTemp = getDocument("item", { "_id" : oldDocID })
-			oldDoc = { "itemName" : oldDocTemp[0], "xCoord" : oldDocTemp[1], "yCoord" : oldDocTemp[2], "temperature" : oldDocTemp[3], "lightSensitivity" : oldDocTemp[4], "itemTaken" : oldDocTemp[5], "robotID" : oldDocTemp[6], "slotID" : oldDocTemp[7] }
-			newDoc = { "itemName" : newArray[0], "xCoord" : newArray[1], "yCoord" : newArray[2], "temperature" : newArray[3], "lightSensitivity" : newArray[4], "itemTaken" : newArray[5], "robotID" : newArray[6], "slotID" : newArray[7] }
+			oldDoc = { "itemName" : oldDocTemp[0], "xCoord" : oldDocTemp[1], "yCoord" : oldDocTemp[2], "tempMin" : oldDocTemp[3], "tempMax" : oldDocTemp[4], "lightMin" : oldDocTemp[5], "lightMax" : oldDocTemp[6], "itemTaken" : oldDocTemp[7], "robotID" : oldDocTemp[8], "slotID" : oldDocTemp[9] }
+			newDoc = { "itemName" : newArray[0], "xCoord" : newArray[1], "yCoord" : newArray[2], "tempMin" : newArray[3], "tempMax" : newArray[4], "lightMin" : newArray[5], "lightMax" : newArray[6], "itemTaken" : newArray[7], "robotID" : newArray[8], "slotID" : newArray[9] }
 			result = db.item.replace_one(oldDoc, newDoc)
 	elif coll == "slot":
 		if len(newArray) != 6:

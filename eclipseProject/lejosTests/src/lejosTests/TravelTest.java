@@ -37,8 +37,8 @@ public class TravelTest {
   static Chassis myChassis = new WheeledChassis( new Wheel[]{leftWheel, rightWheel}, WheeledChassis.TYPE_DIFFERENTIAL);
   
   
-  public void go() {
-    pilot.travel(70);
+  public void go(SensorTest sensor) {
+    //pilot.travel(70);
     /*
     while (pilot.isMoving()) {
       bump.fetchSample(sample, 0);
@@ -53,7 +53,23 @@ public class TravelTest {
     
    // pilot.rotate(90, true);
     
-    arm.rotate(-90); //lower the arm
+   // arm.rotate(-90); //lower the arm
+    
+    pilot.forward();
+    
+    //checks if an object is closer than 20 cm, if it is: stop
+    
+    boolean objectInTheWay = false;
+    
+    while(!objectInTheWay){
+    	
+    	if( sensor.getUltrasonicDistance() < 0.2){
+    		pilot.stop();
+    		objectInTheWay = true;
+    	}
+    	
+    }
+    
     Delay.msDelay(3000);
   }
  
@@ -65,9 +81,11 @@ public class TravelTest {
     traveler.arm = new EV3MediumRegulatedMotor(MotorPort.D);
   //  traveler.arm = new EV3MediumRegulatedMotor(MotorPort.D);
     //traveler.arm.rotate(90);
+    SensorTest sensor = new SensorTest();
     
     traveler.pilot = new MovePilot(myChassis);
     
-    traveler.go();
+    traveler.go(sensor);
   } 
+  
 }
