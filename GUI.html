@@ -1,14 +1,46 @@
 <html>
 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css">
-<body>
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/css/bootstrap-slider.min.css">
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/bootstrap-slider.min.js"></script>
+<body>
+<div id="storeModal" class="modal fade" role="dialog">
+	<!-- Modal content-->
+	<div class="modal-dialog">
+  		<div class="modal-content">
+      		<div class="modal-header">
+        	<button type="button" class="close" data-dismiss="modal">&times;</button>
+        	<h4 class="modal-title">Store new item</h4>
+      		</div>
+	      	<div class="modal-body">
+	        <form>
+			<div class="form-group">
+				<label for="itemId">ItemID</label>
+				<input type="itemId" class="form-control" id="itemId">
+				<label for="itemId">Temperature range (celcius degree)</label><br>
+				<input id="tempReq" class="form-control" type="text" data-slider-min="-20" data-slider-max="50" data-slider-step="1" data-slider-value="[-20, 50]"/><br>
+				<label for="itemId">Lighting range</label><br>
+				<input id="lightReq" class="form-control" type="text" data-slider-min="-20" data-slider-max="50" data-slider-step="1" data-slider-value="[-20, 50]"/>
+			</div>
+			
+			</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-info" data-dismiss="modal">Store now!</button>
+	        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	      	</div>
+    	</div>
+  </div>
+</div>
 <div class="row">
-	<div class="col-md-6" style="background-color: rgba(63, 161, 68, 0.8);">
+	<button type="button" class="btn btn-info btn-lg col-md-6" data-toggle="modal" data-target="#storeModal"><h3>STORE</h3></button>
+
+	<!-- <div class="col-md-6" style="background-color: rgba(63, 161, 68, 0.8);">
 		<h3>STORE</h3>
-	</div>
-	<div class="col-md-6" style="background-color: rgba(165, 55, 68, 0.8);">
-		<h3>RETRIVE</h3>
-	</div>
+	</div> -->
+	<button type="button" class="btn btn-success btn-lg col-md-6" data-toggle="modal" data-target="#storeModal"><h3>RETRIEVE</h3></button>
 </div>
 <div class="row">
 	<div class="col-md-4">
@@ -42,7 +74,8 @@
 </body>
 
 <script>
-
+	$("#tempReq").slider({});
+	$("#lightReq").slider({});
 </script>
 
 <style>
@@ -80,7 +113,7 @@ li:last-child {
 }
 
 li a {
-  text-decoration: none;
+  text-decoration: none !important;
   color: #000;
 
   -webkit-transition: font-size 0.3s ease, background-color 0.3s ease;
