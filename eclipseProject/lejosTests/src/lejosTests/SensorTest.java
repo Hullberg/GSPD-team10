@@ -40,7 +40,7 @@ public class SensorTest {
 	}
 	*/
 	
-/*
+/*   from https://sourceforge.net/p/lejos/wiki/Sensor%20Framework/
 	// get a port instance
 	Port port = LocalEV3.get().getPort("S2");
 
@@ -58,7 +58,7 @@ public class SensorTest {
 	while(true) 
 	  distance.fetchSample(sample, 0);
 	*/
-	
+	/*
 	public static void main(String[] args){
 		
 		SensorTest sensT = new SensorTest();
@@ -76,6 +76,6 @@ public class SensorTest {
 	
 		
 	}
-	
+	*/
 	
 }
