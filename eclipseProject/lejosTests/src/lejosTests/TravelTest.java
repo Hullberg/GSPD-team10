@@ -58,7 +58,7 @@ public class TravelTest {
   }
  
   
-  
+  /*
   
   public static void main(String[] args) {
     TravelTest traveler = new TravelTest();
@@ -70,4 +70,5 @@ public class TravelTest {
     
     traveler.go();
   } 
+  */
 }
