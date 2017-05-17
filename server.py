@@ -1,6 +1,6 @@
 import socket
 import string
-import MySQLdb
+import mongodb
 
 
 def send_http(HTTPBODY,connection):
@@ -35,21 +35,10 @@ def send_http(HTTPBODY,connection):
 	connection.send(response_body_raw)
 
 
-
-#SQL-calls can now be made with cursor.execute('SELECT * FROM table'), example:
-#sql = "SELECT * FROM Slot"
-#cursor.execute(sql)
-
 if __name__ == '__main__':
 
-	# Create database connection, and prepare cursor
-	db = MySQLdb.connect('localhost','root','', 'gspd')
-	cursor = db.cursor()
-
-	# mysql.server start (in console)
-	# mysql -h localhost -u root -p (leave password blank)
-
-	HOST, PORT = '', 8889
+	
+	HOST, PORT = '', 8888
 
 	# Bind a socket to allow connection to web client.
 	listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -75,56 +64,59 @@ if __name__ == '__main__':
 			args = req[5:]
 			args = args[1:len(args)-1]
 			#itemindex is always 0
-			tempindex = args.find(",",0,len(args))
-			lightindex = args.find(",",tempindex+1,len(args))
-			itemName = args[0:tempindex]
-			tempReq = args[tempindex+1:lightindex]
-			lightReq = args[lightindex+1:len(args)]
+			tempMINindex = args.find(",",0,len(args))
+			tempMAXindex = args.find(",",tempminindex+1,len(args))
+			lightMINindex = args.find(",",tempMAXindex+1,len(args))
+			lightMAXindex = args.find(",",lightMINindex+1,len(args))
+			itemName = args[0:tempMINindex]
+			tempMin = args[tempMINindex+1:tempMAXindex]
+			tempMax = args[tempMAXindex+1:lightMINindex]
+			lightMin = args[lightMINindex+1:lightMAXindex]
+			lightMax = args[lightMAXindex+1:len(args)]
 			print itemName
-			print tempReq
-			print lightReq
+			print tempMin
+			print tempMax
+			print lightMin
+			print lightMax
 
-			tempbody = "Item: " + itemName + ", temp: " + tempReq + ", light: " + lightReq
+			tempbody = "Item: " + itemName + ", tempMin: " + tempMin + ", tempMax: " + tempMax + ", lightMin: " + lightMin + ", lightMax: " + lightMax
 			send_http(tempbody, client_connection)
 
-
+			# Find good spot with requirements fullfilled and slot free.
+			slot = getDocument("slot", { "lightSensitivity" : lightReq, "temperature" : tempReq, "slotTaken" : False })
+			
+			# Create item object, set it's coordinates to same as slots.
+			item = [itemName, slot[1], slot[2], tempReq, lightReq, False, "", slot[0]] # Set slotID to slot's ID.
+			res1 = postDocument("item", item) # returns ID of object.
+			
+			# Update slot so it is taken
+			updSlot = [slot[1], slot[2], True, slot[4], slot[5], res1]
+			res = updateDocument("slot", slot[0], updSlot) # Returns true if success
 			# Should also adjust to tempReq and lightReq, with a reasonable range, but that is not decided yet.
-			#sql = "SELECT * FROM Slot WHERE slotTaken = 'FALSE'"
-
-			try: 
-				cursor.execute(sql)
-				results = cursor.fetchall()
-				for row in results:
-					slotID = row[0]
-					xCoord = row[1]
-					yCoord = row[2]
-					slotTaken = row[3]
-					item__slot = row[4]
-			except:
-				print "Error: unable to fecth data"
+			
+			# #
+			# Send this to the robot
+			# #
 
 		elif req[0:8] == 'retrieve':
 			print 'retrieve, args: ' + req[8:]
 			args = req[8:]
 			# Only itemName
 			itemName = args[1:len(args)-1]
-
-			#sql = "SELECT * FROM Item WHERE itemName = '%s'" % itemName
-			#try:
-			#	cursor.execute(sql)
-			#	results = cursor.fetchall()
-			#	for row in results:
-			#		itemID = row[0]
-			#		itemName = row[1]
-			#		xCoord = row[2]
-			#		yCoord = row[3]
-			#		tempReq = row[4]
-			#		lightReq = row[5]
-			#		itemTaken = row[6]
-			#		robot__item = row[7]
-			#		item__slot = row[8]
+			item = getDocument("item", { "itemName" : itemName })
+			slot = getDocument("slot", { "_id" : item[8]}) # Should be slotID
 			
+			# #
+			# Send this information to the robot
+			# #
 
+			# Set the slot to slotTaken = False, as we take away the item.
+			updSlot = [slot[1], slot[2], False, slot[4], slot[5], ""]
+			res = updateDocument("slot", slot[0], updSlot) # Returns true if success
+
+			# Remove the item from the database, as it has been taken out.
+			res1 = deleteDocument("item", item[0])
+			
 
 		elif req[0:7] == 'moveUp':
 			print 'moveUp, args: ' + req[7:]
@@ -152,8 +144,4 @@ if __name__ == '__main__':
 #	Hello, World!
 #	"""
 		#send_http("poop",client_connection)
-		client_connection.close()
-
-
-
-	db.close()
+	client_connection.close()
