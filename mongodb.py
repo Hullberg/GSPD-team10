@@ -109,7 +109,7 @@ def updateDocument(coll,oldDocID,newArray):
 			return "Wrong number of values for Item"
 		else:
 			oldDocTemp = getDocument("item", { "_id" : oldDocID })
-			oldDoc = { "itemName" : oldDocTemp[0], "xCoord" : oldDocTemp[1], "yCoord" : oldDocTemp[2], "tempMin" : oldDocTemp[3], "tempMax" : oldDocTemp[4], "lightMin" : oldDocTemp[5],, "lightMax" : oldDocTemp[6], "itemTaken" : oldDocTemp[7], "robotID" : oldDocTemp[8], "slotID" : oldDocTemp[9] }
+			oldDoc = { "itemName" : oldDocTemp[0], "xCoord" : oldDocTemp[1], "yCoord" : oldDocTemp[2], "tempMin" : oldDocTemp[3], "tempMax" : oldDocTemp[4], "lightMin" : oldDocTemp[5], "lightMax" : oldDocTemp[6], "itemTaken" : oldDocTemp[7], "robotID" : oldDocTemp[8], "slotID" : oldDocTemp[9] }
 			newDoc = { "itemName" : newArray[0], "xCoord" : newArray[1], "yCoord" : newArray[2], "tempMin" : newArray[3], "tempMax" : newArray[4], "lightMin" : newArray[5], "lightMax" : newArray[6], "itemTaken" : newArray[7], "robotID" : newArray[8], "slotID" : newArray[9] }
 			result = db.item.replace_one(oldDoc, newDoc)
 	elif coll == "slot":
