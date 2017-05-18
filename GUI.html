@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/bootstrap-slider.min.js"></script>
 <body>
-<div id="debugBox" style="position: fixed; right: 0; bottom: 0; width: 500px; height: 400px; background-color: rgba(40,40,40,0.6); color: lightgreen">
+<div id="debugBox" style="position: fixed; right: 0; bottom: 0; width: 500px; height: 400px; background-color: rgba(40,40,40,0.6); color: lightgreen; font-size: 16px;">
 	DEBUG BOX<br>
 </div>
 <div id="storeModal" class="modal fade" role="dialog">
@@ -114,17 +114,28 @@
 	$("#tempReq").slider({});
 	$("#lightReq").slider({});
 
-	const socket = new WebSocket('ws://localhost:5000');
+	const serverAddress = 'ws://localhost:9000';
+	const socket = new WebSocket(serverAddress);
 
 	socket.addEventListener('open', (event)=>{
-		socket.send('Hello server!');
-		socket.send('Give me infos about your robots!');
+		debug("Sending test message to: " + serverAddress);
+		var message = 'Hello server! \n Give me infos about your robots!';
+		debug("Sending: " + message);
+		socket.send(message);
 	});
 
 	socket.addEventListener('message', (event)=>{
-		$('#debugBox').append('server :' + event.data);
+		debug('server :' + JSON.stringify(event.data));
+		console.log(event);
 	});
 
+	// socket.addEventListener('data', (event)=>{
+	// 	debug('server :' + event.data);
+	// });
+
+	function debug(string){
+		$('#debugBox').append(string + "<br>");
+	}
 
 </script>
 
