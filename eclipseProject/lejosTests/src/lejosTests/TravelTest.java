@@ -44,6 +44,8 @@ public class TravelTest {
   static Wheel rightWheel = WheeledChassis.modelWheel(new EV3MediumRegulatedMotor(MotorPort.C), WHEEL_SIZE_EV3).offset(59).gearRatio(1);
   static Chassis myChassis = new WheeledChassis( new Wheel[]{leftWheel, rightWheel}, WheeledChassis.TYPE_DIFFERENTIAL);
   
+  
+ SensorTest sensor = new SensorTest();
   public TravelTest(){
 	  
 	  this.pilot = new MovePilot(myChassis);
@@ -73,6 +75,7 @@ public class TravelTest {
   public void moveForward(int slots){
 	  
 	  pilot.travel(50 * slots);
+	  
 	  pilot.stop();
 	  
   }
@@ -100,7 +103,7 @@ public class TravelTest {
   public static void main(String[] args) throws IOException {
     TravelTest traveler = new TravelTest();
  
-    //SensorTest sensor = new SensorTest();
+    SensorTest sensor = new SensorTest();
     LCD.drawString("Connecting", 1,1 );
     BTConnector bt = new BTConnector();
 	BTConnection conn = bt.waitForConnection(10000, 2);
