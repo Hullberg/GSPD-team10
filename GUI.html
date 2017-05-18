@@ -114,7 +114,7 @@
 	$("#tempReq").slider({});
 	$("#lightReq").slider({});
 
-	const socket = new WebSocket('ws://localhost:8888');
+	const socket = new WebSocket('ws://localhost:5000');
 
 	socket.addEventListener('open', (event)=>{
 		socket.send('Hello server!');
@@ -129,8 +129,6 @@
 </script>
 
 <style>
-	@import "compass/css3";
-
 	body{
 		margin: 0;
 	}
