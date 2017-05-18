@@ -20,7 +20,7 @@ connected = False
 
 
 
-sock.send(struct.pack(">8s", "42,43,44")) # 8 is for the length of the string
+sock.send(struct.pack(">3i", 3,3,44)) #
 
 
 num = struct.unpack(">I", sock.recv(1024))[0]

@@ -28,8 +28,7 @@ public class SensorTest {
 
 	float[] sample = new float[distance.sampleSize()];
 	
-	public float getUltrasonicDistance(){	
-		
+	public float getDistance(){	
 	 distance.fetchSample(sample, 0);
 		return sample[0];
 	}
@@ -67,7 +66,7 @@ public class SensorTest {
 		LCD.drawInt(distance.sampleSize(), 4, 0);
 		for(int i = 0; i < 3; i++){
 			
-			float test = sensT.getUltrasonicDistance();		
+			float test = sensT.getDistance();		
 			String t = Float.toString(test);
 			
 			LCD.drawString(t, 4 , i+1);
