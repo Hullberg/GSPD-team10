@@ -1,14 +1,14 @@
 <html>
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/css/tether.min.css">
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css">
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/css/bootstrap-slider.min.css">
+<!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/css/tether.min.css"> -->
+<link rel="stylesheet" type="text/css" href="GUI_lib/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="GUI_lib/bootstrap-slider.min.css">
 
 
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script> -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="GUI_lib/jquery.min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/bootstrap-slider.min.js"></script>
+<script src="GUI_lib/bootstrap.min.js"></script>
+<script src="GUI_lib/bootstrap-slider.min.js"></script>
 <body>
 <div id="debugBox" style="position: fixed; right: 0; bottom: 0; width: 500px; height: 400px; background-color: rgba(40,40,40,0.6); color: lightgreen; font-size: 16px;">
 	DEBUG BOX<br>
@@ -25,13 +25,13 @@
 	        <form>
 			<div class="form-group">
 				<label for="itemId">Item name</label>
-				<input type="itemId" class="form-control" id="itemId"><br>
+				<input type="text" class="form-control" id="itemName"><br>
 
-				<label for="itemId">Allowed temperature range (celcius degree)</label><br>
+				<label>Allowed temperature range (celcius degree)</label><br>
 				<span style="display: inline-block; width: 50px;"><b>-20 C</b></span>
 				<input id="tempReq" class="form-control" type="text" data-slider-min="-20" data-slider-max="50" data-slider-step="1" data-slider-value="[-20, 50]"/><span style="display: inline-block; padding-left: 20px; width: 50px;"><b>50 C</b></span><br><br>
 
-				<label for="itemId">Allowed light range (lumens)</label><br>
+				<label>Allowed light range (lumens)</label><br>
 				<span style="display: inline-block; width: 50px;"><b>0 L</b></span>
 				<input id="lightReq" class="form-control" type="text" data-slider-min="0" data-slider-max="10000" data-slider-step="100" data-slider-value="[0, 10000]"/><span style="display: inline-block; padding-left: 20px; width: 80px;"><b>10000 L</b></span><br>
 
@@ -40,8 +40,8 @@
 			</form>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-info" data-dismiss="modal">Store now!</button>
-	        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="storeBtn" type="button" class="btn btn-info" data-dismiss="modal">Store now!</button>
+	        	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 	      	</div>
     	</div>
   </div>
@@ -68,8 +68,8 @@
 			</form>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-success" data-dismiss="modal">Retrieve now!</button>
-	        	<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<button id="retrieveBtn" type="button" class="btn btn-success" data-dismiss="modal">Retrieve now!</button>
+	        	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 	      	</div>
     	</div>
   </div>
@@ -118,25 +118,44 @@
 	const socket = new WebSocket(serverAddress);
 
 	socket.addEventListener('open', (event)=>{
-		debug("Sending test message to: " + serverAddress);
+		debug("Connection to " + serverAddress + " opened.");
 		var message = 'Hello server! \n Give me infos about your robots!';
-		debug("Sending: " + message);
-		socket.send(message);
+		debugSend(message);
+		
 	});
 
 	socket.addEventListener('message', (event)=>{
-		debug('server :' + JSON.stringify(event.data));
+		debug('server: ' + JSON.stringify(event.data));
 		console.log(event);
 	});
 
-	// socket.addEventListener('data', (event)=>{
-	// 	debug('server :' + event.data);
-	// });
+	$('#storeBtn').click(()=>{
+		var tempReq = $('#tempReq').val().split(',');
+		var tempMin = tempReq[0];
+		var tempMax = tempReq[1];
+		var lightReq = $('#lightReq').val().split(',');
+		var lightMin = lightReq[0];
+		var lightMax = lightReq[1];
 
+		debugSend('store|'+ $('#itemName').val() + "|" +
+			tempMin + "|" + 
+			tempMax + "|" + 
+			lightMin + "|" + 
+			lightMax + "|");
+	})
+
+	$('#retrieveBtn').click(()=>{		
+		debugSend('retrieve|'+ $('#itemId').val());
+	})
+
+
+	function debugSend(string){
+		debug("Me: " + string);
+		socket.send(string);
+	}
 	function debug(string){
 		$('#debugBox').append(string + "<br>");
 	}
-
 </script>
 
 <style>

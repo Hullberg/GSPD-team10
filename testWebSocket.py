@@ -11,15 +11,32 @@ from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 
 class SimpleEcho(WebSocket):
 
-    def handleMessage(self):
-        # echo message back to client
-        self.sendMessage(self.data)
+    def handleMessage(client):
+        parameters = client.data.split('|')
+        command = parameters[0]
 
-    def handleConnected(self):
-        print(self.address, 'connected')
+        print(client.data);
+        
+        if command == 'store':
+            packageName = parameters[1]
+            tempMin = parameters[2]
+            tempMax = parameters[3]
+            lightMin = parameters[4]
+            lightMax = parameters[5]
+            client.sendMessage(u'Found a slot for ' + packageName)
+            client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
-    def handleClose(self):
-        print(self.address, 'closed')
+        elif command == 'retrieve':
+            packageId = parameters[1]
+            client.sendMessage(u'Package ' + packageId + ' is queued for delivery to the gate. Please be informed');
+
+
+    def handleConnected(client):
+        print(client.address, 'connected')
+
+    def handleClose(client):
+        print(client.address, 'closed')
+
 
 server = SimpleWebSocketServer('', 9000, SimpleEcho)
 server.serveforever()
