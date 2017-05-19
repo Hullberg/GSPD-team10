@@ -1,15 +1,9 @@
 package lejosTests;
 
-import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.lcd.LCD;
-import lejos.hardware.port.Port;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.hardware.sensor.SensorMode;
-import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
-import lejos.utility.Delay;
 
 public class SensorTest {
 	
