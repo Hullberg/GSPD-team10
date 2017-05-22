@@ -9,10 +9,10 @@
 
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from pymongo import MongoClient
-import mongodb # DB API
-from tornado import ioloop
+#import mongodb # DB API
+import asyncdb
+from tornado import ioloop, gen
 import datetime
-from tornado import gen
 
 class SimpleEcho(WebSocket):
 
@@ -28,13 +28,16 @@ class SimpleEcho(WebSocket):
 			tempMax = parameters[3]
 			lightMin = parameters[4]
 			lightMax = parameters[5]
-			print "getting Slot from DB"
-			ioloop.IOLoop.current().run_sync(getDocument("slot", { "temperature" : {"$in" : [tempMin,tempMax]} , "lightSensitivity" : {"$in" : [lightMin,lightMax]}}))
-			#slotfromDB = 
-			#print slot
+			
 
 			client.sendMessage(u'Found a slot for ' + packageName)
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
+
+			print "getting Slot from DB"
+			#doc = { "temperature" : {"$in" : [tempMin,tempMax]} , "lightSensitivity" : {"$in" : [lightMin,lightMax]}}
+			#resp = ioloop.IOLoop.current().run_sync(getSlot({"itemID" : ""})), callback=my_callback)
+			res = yield getSlot({"itemID" : ""})
+			print res
 
 		elif command == 'retrieve':
 			packageId = parameters[1]
@@ -47,24 +50,21 @@ class SimpleEcho(WebSocket):
 	def handleClose(client):
 		print(client.address, 'closed')
 
-def my_callback():
-	#print('result %s' % repr(result.inserted_id))
-	ioloop.IOLoop.current().stop()
+# def my_callback(result,error):
+# 	print result
+# 	#print('result %s' % repr(result.inserted_id))
+# 	ioloop.IOLoop.current().stop()
 
 @gen.coroutine
 def main():
-	#mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
-	#db = mc_client.gspd
-	#slot = db.slot
+	# Mongo-variables imported
 
-	#io_loop = ioloop.IOLoop.current()
-	#io_loop.add_timeout(datetime.timedelta(seconds=5),callback=my_callback)
-	#callback = functools.partial(connection_ready, sock)
-	#io_loop.add_handler(sock.fileno(), callback, io_loop.READ)
-	#io_loop.start()
+	print "Started main"
+	
+
+if __name__ == '__main__':
 
 	server = SimpleWebSocketServer('', 9000, SimpleEcho)
 	server.serveforever()
-
-if __name__ == '__main__':
-	ioloop.IOLoop.current().run_sync(main)
+	print "Will start main-instance now"
+	ioloop.IOLoop.instance().run_sync(main)

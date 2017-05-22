@@ -1,6 +1,5 @@
 from motor import motor_tornado
-from tornado import gen
-from tornado import ioloop
+from tornado import gen, ioloop
 #import bson
 
 
@@ -25,7 +24,6 @@ db = mc_client.gspd
 # eg: keyvaluepair = {"xCoord" : 25} -- Important, no quotation marks before/after {}
 # Will yield an array, length depending on the collection. Look at drive-database-document to see structure
 
-#IOLoop.current().run_sync(getDocument(coll,json))
 @gen.coroutine
 def getDocument(coll,jsonquery):
 	if coll == "robot":
@@ -60,8 +58,10 @@ def getDocument(coll,jsonquery):
 			temp = yield db.slot.find_one(jsonquery)
 		
 		if temp != None:
+			print "got something"
 			resp = [temp['_id'], temp['xCoord'], temp['yCoord'], temp['slotTaken'], temp['lightSensitivity'], temp['temperature'], temp['itemID']]
-			yield resp
+			print "Raising response"
+			raise gen.Return(resp)
 		else:
 			yield "No such document"
 
