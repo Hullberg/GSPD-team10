@@ -12,10 +12,10 @@ from pymongo import MongoClient
 #import mongodb # DB API
 import asyncdb
 from tornado import ioloop, gen
-import datetime
 
 class SimpleEcho(WebSocket):
 
+	@gen.coroutine
 	def handleMessage(client):
 		parameters = client.data.split('|')
 		command = parameters[0]
@@ -34,9 +34,8 @@ class SimpleEcho(WebSocket):
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
 			print "getting Slot from DB"
-			#doc = { "temperature" : {"$in" : [tempMin,tempMax]} , "lightSensitivity" : {"$in" : [lightMin,lightMax]}}
-			#resp = ioloop.IOLoop.current().run_sync(getSlot({"itemID" : ""})), callback=my_callback)
-			res = yield getSlot({"itemID" : ""})
+			# The line below is where it gets stuck... :(
+			res = yield asyncdb.getSlot({"itemID" : ""})
 			print res
 
 		elif command == 'retrieve':
@@ -50,10 +49,7 @@ class SimpleEcho(WebSocket):
 	def handleClose(client):
 		print(client.address, 'closed')
 
-# def my_callback(result,error):
-# 	print result
-# 	#print('result %s' % repr(result.inserted_id))
-# 	ioloop.IOLoop.current().stop()
+
 
 @gen.coroutine
 def main():
@@ -63,8 +59,6 @@ def main():
 	
 
 if __name__ == '__main__':
-
 	server = SimpleWebSocketServer('', 9000, SimpleEcho)
-	server.serveforever()
-	print "Will start main-instance now"
 	ioloop.IOLoop.instance().run_sync(main)
+	server.serveforever()
