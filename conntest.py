@@ -2,15 +2,19 @@ import bluetooth
 import struct
 import readchar
 import time
+import robot_conn
 
 bd_addr = "00:16:53:52:1E:34" #EV3 robot address
 
 port = 1
 
-sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+#sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 
 
-sock.connect((bd_addr, port))
+#sock.connect((bd_addr, port))
+
+sock = robot_conn.connect(bd_addr) # uses connect function from robot_conn
+
 connected = False
 
 # try to connect in a loop
@@ -35,8 +39,12 @@ for x in range(0,3):
 # use this to send a set of three coordinates to the robot
 #sock.send(struct.pack(">3i", 3,3,44)) #
 
+coords = [x in range(0,6)]
 
-num = struct.unpack(">I", sock.recv(1024))[0]
+robot_conn.send_coords(sock, coords)
+
+
+num = robot_conn.recv_int(sock)
 
 print("the answer is " + str(num))
 
