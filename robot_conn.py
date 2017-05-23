@@ -1,4 +1,4 @@
-import bluetooth, struct, readchar, time
+import bluetooth, struct, time
 
 
 #see API document in the drive for more info on the functions
