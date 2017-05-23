@@ -15,6 +15,7 @@ from motor import motor_tornado
 from tornado import ioloop, gen
 from tornado.ioloop import IOLoop
 import time
+from motor import motor_tornado
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
@@ -75,12 +76,13 @@ class SimpleEcho(WebSocket):
 
 	def handleClose(client):
 		print(client.address, 'closed')
-
+		
 
 def getSlotDone(result, error):
 	print('Slot info is now ready')
 	print('result %s error %s' % (repr(result), repr(error)))
 	IOLoop.current().stop()
+
 
 if __name__ == '__main__':
 	server = SimpleWebSocketServer('', 9000, SimpleEcho)
