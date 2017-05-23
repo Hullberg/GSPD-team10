@@ -8,10 +8,12 @@
 # And then run the GUI.html to see the test result :)
 
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-from pymongo import MongoClient
+# from pymongo import MongoClient
 #import mongodb # DB API
 # import asyncdb
+from motor import motor_tornado
 from tornado import ioloop, gen
+from tornado.ioloop import IOLoop
 import time
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
@@ -39,9 +41,10 @@ class SimpleEcho(WebSocket):
 
 			# gte = greater than or equal to
 			# lte = lesser than or equal to
-			simpleQuery = { "lightSensitivity" : {"$lt" : 800}, "lightSensitivity" : {"$gt" : 700} };
+			simpleQuery = { "lightSensitivity" : {"$lt" : 800}, "lightSensitivity" : {"$gt" : 700} }
 
-			db.find_one(simpleQuery, getSlotDone)
+			db.slot.find_one(simpleQuery, callback=getSlotDone)
+			ioloop.IOLoop.current().start()
 
 			# Post the item
 			# newItem = [packageName, gotten[1], gotten[2], tempMin, tempMax, lightMin, lightMax, False, None, result[0]]
@@ -54,9 +57,7 @@ class SimpleEcho(WebSocket):
 			# updated = asyncdb.updateSlot(gotten[0], gotten[1:6])
 			# updated == 1 => successful
 
-			ioloop.IOLoop.current().start()
-
-
+			
 
 		elif command == 'retrieve':
 			packageId = parameters[1]
@@ -69,13 +70,6 @@ class SimpleEcho(WebSocket):
 			slotToGet = asyncdb.getItem({ "_id" : itemToGet[10]})
 			ioloop.IOLoop.current.stop()
 
-
-	def getSlotDone(result, error):
-		print('Slot info is now ready')
-		print('result %s error %s' % (repr(result), repr(error)))
-		IOLoop.current().stop()
-
-
 	def handleConnected(client):
 		print(client.address, 'connected')
 
@@ -83,13 +77,11 @@ class SimpleEcho(WebSocket):
 		print(client.address, 'closed')
 
 
-
-# @gen.coroutine
-def main():
-	# Mongo-variables imported
-
+def getSlotDone(result, error):
+	print('Slot info is now ready')
+	print('result %s error %s' % (repr(result), repr(error)))
+	IOLoop.current().stop()
 
 if __name__ == '__main__':
 	server = SimpleWebSocketServer('', 9000, SimpleEcho)
-	ioloop.IOLoop.instance().run_sync(main)
 	server.serveforever()
