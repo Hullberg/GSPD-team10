@@ -62,7 +62,7 @@ public class Connection {
 		}
 		return coords;
 	}
-/*
+
 	public int readInt(){
 		int i;
 		try {
@@ -74,7 +74,7 @@ public class Connection {
 		i = ByteBuffer.wrap(buf).getInt();
 		return i;
 	}
-	*/
+	
 	
 	/**
 	 * @param coords  an int array containing x,y, and z coordinates of the robots current position.
@@ -91,7 +91,7 @@ public class Connection {
 		buf = b.array();
 		
 		try {
-			dos.write(buf, 0, 8);
+			dos.write(buf, 0, 12);
 			dos.flush();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -107,7 +107,7 @@ public class Connection {
 	
    public void sendInt(int i){
 	   try {
-		dos.writeInt(i);
+		 dos.writeInt(i);
 		 dos.flush();
 	} catch (IOException e) {
 		// TODO Auto-generated catch block
