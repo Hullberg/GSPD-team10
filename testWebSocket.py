@@ -13,6 +13,7 @@ from pymongo import MongoClient
 # import asyncdb
 from tornado import ioloop, gen
 import time
+from motor import motor_tornado
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
@@ -87,6 +88,7 @@ class SimpleEcho(WebSocket):
 # @gen.coroutine
 def main():
 	# Mongo-variables imported
+	lol = 1+1
 
 
 if __name__ == '__main__':
