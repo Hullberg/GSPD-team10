@@ -12,6 +12,8 @@ from pymongo import MongoClient
 #import mongodb # DB API
 import asyncdb
 from tornado import ioloop, gen
+import time
+
 
 class SimpleEcho(WebSocket):
 
@@ -33,14 +35,43 @@ class SimpleEcho(WebSocket):
 			client.sendMessage(u'Found a slot for ' + packageName)
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
-			print "getting Slot from DB"
-			# The line below is where it gets stuck... :(
-			res = yield asyncdb.getSlot({"itemID" : ""})
-			print res
+			# The 'getSlot' does not yield for some reason.. :(
+			ioloop.IOLoop.current().stop()
+			# gte = greater than or equal to
+			# lte = lesser than or equal to
+			temp = "temperature" : {"$gte":tempMin}, "temperature" : {"$lte":tempMax}
+			light = "lightSensitivity" : {"$gte":lightMin}, "lightSensitivity" : {"$lte":lightMax}		
+			gotten = asyncdb.getSlot({ temp, light, "slotTaken" : False })
+			ioloop.IOLoop.current().start()
+
+			# Post the item
+			newItem = [packageName, gotten[1], gotten[2], tempMin, tempMax, lightMin, lightMax, False, None, result[0]]
+			ioloop.IOLoop.current().stop()
+			posted = asyncdb.postItem(newItem)
+			ioloop.IOLoop.current.start()
+
+			# Update slot to slotTaken = True, and itemID. (posted is the ID of the newly inserted item)
+			gotten[3] = True
+			gotten[6] = posted
+			ioloop.IOLoop.current().stop()
+			updated = asyncdb.updateSlot(gotten[0], gotten[1:6])
+			# updated == 1 => successful
+			ioloop.IOLoop.current().start()
+
+
 
 		elif command == 'retrieve':
 			packageId = parameters[1]
 			client.sendMessage(u'Package ' + packageId + ' is queued for delivery to the gate. Please be informed');
+
+			# get item and slot info
+			ioloop.IOLoop.current.start()
+			itemToGet = asyncdb.getItem({ "_id" : packageId})
+			ioloop.IOLoop.current.stop()
+			slotToGet = asyncdb.getItem({ "_id" : itemToGet[10]})
+			ioloop.IOLoop.current.stop()
+
+
 
 
 	def handleConnected(client):

@@ -1,10 +1,17 @@
 from motor import motor_tornado
 from tornado import gen, ioloop
+import time
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 	
 # Makes sure db is our 'gspd'-database
 db = mc_client.gspd
+
+#ioloop = ioloop.IOLoop.current()
+
+# def my_callback(result, error):
+# 	print('result %s error %s' % (repr(result), repr(error)))
+# 	IOLoop.current().stop()
 
 # # #
 # GET-functions - Will return the object asked for in query.
@@ -106,10 +113,14 @@ def updateItem(ID,array):
 # # #
 @gen.coroutine
 def main():
-	res2 = yield getItem({"itemName" : ""})
+	start = time.time()
+	res2 = yield getSlot({ "lightSensitivity" : {"$lt" : 800}, "lightSensitivity" : {"$gt" : 700} })#, "lightSensitivity" : {"mt" : 700} })
+	print "Hopefully gets item with 700 < light < 800"
 	print res2 # No result, as Item is currently empty
-	res = yield getSlot({"itemID" : ""})
-	print res
+	#res = yield getSlot({"itemID" : ""})
+	#print res
+	end = time.time()
+	print (end-start)
 
 if __name__ == '__main__':
 	ioloop.IOLoop.instance().run_sync(main)
