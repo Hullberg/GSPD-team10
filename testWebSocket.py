@@ -9,13 +9,15 @@
 
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from pymongo import MongoClient
-import mongodb # DB API
-from tornado import ioloop
-import datetime
-from tornado import gen
+#import mongodb # DB API
+import asyncdb
+from tornado import ioloop, gen
+import time
+
 
 class SimpleEcho(WebSocket):
 
+	@gen.coroutine
 	def handleMessage(client):
 		parameters = client.data.split('|')
 		command = parameters[0]
@@ -28,17 +30,48 @@ class SimpleEcho(WebSocket):
 			tempMax = parameters[3]
 			lightMin = parameters[4]
 			lightMax = parameters[5]
-			print "getting Slot from DB"
-			ioloop.IOLoop.current().run_sync(getDocument("slot", { "temperature" : {"$in" : [tempMin,tempMax]} , "lightSensitivity" : {"$in" : [lightMin,lightMax]}}))
-			#slotfromDB = 
-			#print slot
+			
 
 			client.sendMessage(u'Found a slot for ' + packageName)
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
+			# The 'getSlot' does not yield for some reason.. :(
+			ioloop.IOLoop.current().stop()
+			# gte = greater than or equal to
+			# lte = lesser than or equal to
+			temp = "temperature" : {"$gte":tempMin}, "temperature" : {"$lte":tempMax}
+			light = "lightSensitivity" : {"$gte":lightMin}, "lightSensitivity" : {"$lte":lightMax}		
+			gotten = asyncdb.getSlot({ temp, light, "slotTaken" : False })
+			ioloop.IOLoop.current().start()
+
+			# Post the item
+			newItem = [packageName, gotten[1], gotten[2], tempMin, tempMax, lightMin, lightMax, False, None, result[0]]
+			ioloop.IOLoop.current().stop()
+			posted = asyncdb.postItem(newItem)
+			ioloop.IOLoop.current.start()
+
+			# Update slot to slotTaken = True, and itemID. (posted is the ID of the newly inserted item)
+			gotten[3] = True
+			gotten[6] = posted
+			ioloop.IOLoop.current().stop()
+			updated = asyncdb.updateSlot(gotten[0], gotten[1:6])
+			# updated == 1 => successful
+			ioloop.IOLoop.current().start()
+
+
+
 		elif command == 'retrieve':
 			packageId = parameters[1]
 			client.sendMessage(u'Package ' + packageId + ' is queued for delivery to the gate. Please be informed');
+
+			# get item and slot info
+			ioloop.IOLoop.current.start()
+			itemToGet = asyncdb.getItem({ "_id" : packageId})
+			ioloop.IOLoop.current.stop()
+			slotToGet = asyncdb.getItem({ "_id" : itemToGet[10]})
+			ioloop.IOLoop.current.stop()
+
+
 
 
 	def handleConnected(client):
@@ -47,24 +80,16 @@ class SimpleEcho(WebSocket):
 	def handleClose(client):
 		print(client.address, 'closed')
 
-def my_callback():
-	#print('result %s' % repr(result.inserted_id))
-	ioloop.IOLoop.current().stop()
+
 
 @gen.coroutine
 def main():
-	#mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
-	#db = mc_client.gspd
-	#slot = db.slot
+	# Mongo-variables imported
 
-	#io_loop = ioloop.IOLoop.current()
-	#io_loop.add_timeout(datetime.timedelta(seconds=5),callback=my_callback)
-	#callback = functools.partial(connection_ready, sock)
-	#io_loop.add_handler(sock.fileno(), callback, io_loop.READ)
-	#io_loop.start()
-
-	server = SimpleWebSocketServer('', 9000, SimpleEcho)
-	server.serveforever()
+	print "Started main"
+	
 
 if __name__ == '__main__':
-	ioloop.IOLoop.current().run_sync(main)
+	server = SimpleWebSocketServer('', 9000, SimpleEcho)
+	ioloop.IOLoop.instance().run_sync(main)
+	server.serveforever()
