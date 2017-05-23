@@ -3,25 +3,31 @@ import bluetooth, struct, readchar, time
 
 #see API document in the drive for more info on the functions
 
-def connect(address):
-    sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
-    sock.connect((address, 1))
-    return sock
+class RobotConnection():
 
-def close_conn(sock):
-    sock.close
+    # def connect(address):
+#     sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+#     sock.connect((address, 1))
+#     return sock
 
-
-def send_coords(sock, coords):
-    assert len(coords) == 6
-    sock.send(struct.pack(">6i", *coords))
+    def __init__(self, address):
+        self.sock = bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+        self.sock.connect((address, 1))
 
 
-
-def recv_int(sock):
-    num = struct.unpack(">i", sock.recv(10)[0])
-    return num
+    def close_conn(self):
+        self.sock.close()
 
 
-def command_mode():
-    pass
+    def send_coords(self, coords):
+        assert len(coords) == 6
+        self.sock.send(struct.pack(">6i", *coords))
+
+    def recv_coords(self):
+        nums = struct.unpack(">i", self.sock.recv(12))
+        assert len(coords) == 3
+        return nums
+
+    def recv_int(self):
+        num = struct.unpack(">i", self.sock.recv(4)[0])
+        return num

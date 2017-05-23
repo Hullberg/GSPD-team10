@@ -13,7 +13,11 @@ port = 1
 
 #sock.connect((bd_addr, port))
 
-sock = robot_conn.connect(bd_addr) # uses connect function from robot_conn
+#sock =  robot_conn.connect(bd_addr) # uses connect function from robot_conn
+
+#conn  = robot_conn.Connection(bd_addr)
+
+conn = robot_conn.RobotConnection(bd_addr)
 
 connected = False
 
