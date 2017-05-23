@@ -126,7 +126,7 @@ public class TravelTest {
 		TravelTest traveler = new TravelTest();
 		Connection conn = new Connection();
 
-		traveler.takeThreeCommands(conn);
+	//	traveler.takeThreeCommands(conn);
 		/*
     int[] coords = new int[3];
 
@@ -136,9 +136,11 @@ public class TravelTest {
     traveler.returnFromCoordinates(coords[0], coords[1]);
 		 */
 
-		// conn.readCoordinates();
+		int[] co =	conn.readCoordinates();
+		
 		conn.sendInt(42);
-
+		int[] tr = {1,2,3}; 
+		conn.sendCoordinates(tr);
 		conn.closeConnection();
 		Delay.msDelay(2000);
 
