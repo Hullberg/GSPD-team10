@@ -22,9 +22,9 @@ import lejos.utility.Delay;
 public class TravelTest {
 
 	private static final double WHEEL_SIZE_EV3 = 56;
-	RotateMoveController pilot;
+	private RotateMoveController pilot;
 
-	RegulatedMotor arm;
+	private RegulatedMotor arm;
 	// EV3IRSensor ir = new EV3IRSensor(SensorPort.S4);
 	//SampleProvider bump = ir.getDistanceMode();	
 	//float[] sample = new float[1];
@@ -34,16 +34,17 @@ public class TravelTest {
 	static Chassis myChassis = new WheeledChassis( new Wheel[]{leftWheel, rightWheel}, WheeledChassis.TYPE_DIFFERENTIAL);
 
 
-	SensorTest sensor = new SensorTest();
+	Sensors sensors = new Sensors();
+	
 	public TravelTest(){
 
-		this.pilot = new MovePilot(myChassis);
+		this.setPilot(new MovePilot(myChassis));
 		this.arm = new EV3MediumRegulatedMotor(MotorPort.D);
 	}
 
 
 
-	public void go(SensorTest sensor) {
+	public void go(Sensors sensor) {
 
 		//checks if an object is closer than 20 cm, if it is: stop
 
@@ -52,7 +53,7 @@ public class TravelTest {
 		while(!objectInTheWay){
 
 			if( sensor.getDistance() < 0.2){
-				pilot.stop();
+				getPilot().stop();
 				objectInTheWay = true;
 			}
 
@@ -64,22 +65,22 @@ public class TravelTest {
 
 	public void moveForward(int slots){
 
-		pilot.travel(50 * slots);
+		getPilot().travel(50 * slots);
 
-		pilot.stop();
+		getPilot().stop();
 
 	}
 
 	public void turnRight(){
 
-		pilot.rotate(90);
+		getPilot().rotate(90);
 
 	}
 
 
 	public void turnLeft(){
 
-		pilot.rotate(-90);
+		getPilot().rotate(-90);
 
 	}
 	public void moveToCoordinates(int x, int y){
@@ -122,10 +123,45 @@ public class TravelTest {
 		
 	}
 	
+	public void followLine(){
+		
+		getPilot().forward();
+/*		
+		if(sensors.getColID() == 2){
+			pilot.rotate(10);
+		}
+		else if (sensors.getColID() == 1){
+			pilot.rotate(-10);		
+		}
+	*/	
+		
+		
+	}
+
+
+
+	public RotateMoveController getPilot() {
+		return pilot;
+	}
+
+
+
+	public void setPilot(RotateMoveController pilot) {
+		this.pilot = pilot;
+	}
+	
+	/*
 	public static void main(String[] args){
 		TravelTest traveler = new TravelTest();
-		Connection conn = new Connection();
+		//Connection conn = new Connection();
+		
 
+		
+		String col = Float.toString(traveler.sensors.getColor());
+		LCD.drawString(col, 4, 2);
+		
+		String colID = Integer.toString(traveler.sensors.getColID());
+		LCD.drawString(colID, 4, 4);
 	//	traveler.takeThreeCommands(conn);
 		/*
     int[] coords = new int[3];
@@ -134,16 +170,16 @@ public class TravelTest {
 
     traveler.moveToCoordinates(coords[0], coords[1]);
     traveler.returnFromCoordinates(coords[0], coords[1]);
-		 */
-
-		int[] co =	conn.readCoordinates();
+		 
+	//	int[] co =	conn.readCoordinates();
 		
-		conn.sendInt(42);
-		int[] tr = {1,2,3}; 
-		conn.sendCoordinates(tr);
-		conn.closeConnection();
-		Delay.msDelay(2000);
+		//conn.sendInt(42);
+		//int[] tr = {1,2,3}; 
+		//conn.sendCoordinates(tr);
+		//conn.closeConnection();
+		Delay.msDelay(4000);
 
 
 	} 
+*/
 }

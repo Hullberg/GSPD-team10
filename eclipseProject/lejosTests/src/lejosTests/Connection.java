@@ -33,7 +33,7 @@ public class Connection {
 		BTConnection conn = bt.waitForConnection(10000, 2);
 		LCD.clear();
 		LCD.drawString("Connected", 1, 1);
-		
+		LCD.clear();
 	    this.dis = conn.openDataInputStream();
 	    this.dos = conn.openDataOutputStream();
 		
