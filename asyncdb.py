@@ -114,9 +114,13 @@ def updateItem(ID,array):
 @gen.coroutine
 def main():
 	start = time.time()
-	res2 = yield getSlot({ "lightSensitivity" : {"$lt" : 800}, "lightSensitivity" : {"$gt" : 700} })#, "lightSensitivity" : {"mt" : 700} })
+	#res2 = yield getSlot({ "_id" : 591442da81aa9d5700e68cdb })
+	res = yield db.slot.find_one()
+	#print res['_id']
+	res2 = yield db.slot.find_one({"_id" : {"$oid" : "591442da81aa9d5700e68cdb"}}) 
+	print res2
 	print "Hopefully gets item with 700 < light < 800"
-	print res2 # No result, as Item is currently empty
+	#print res2['_id'] # No result, as Item is currently empty
 	#res = yield getSlot({"itemID" : ""})
 	#print res
 	end = time.time()

@@ -8,22 +8,17 @@
 # And then run the GUI.html to see the test result :)
 
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
-# from pymongo import MongoClient
-#import mongodb # DB API
-# import asyncdb
 from motor import motor_tornado
 from tornado import ioloop, gen
 from tornado.ioloop import IOLoop
 import time
-from motor import motor_tornado
-import pprint
+from bson.objectid import ObjectId
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
 
 class SimpleEcho(WebSocket):
 
-	# @gen.coroutine
 	def handleMessage(client):
 		parameters = client.data.split('|')
 		command = parameters[0]
@@ -31,46 +26,34 @@ class SimpleEcho(WebSocket):
 		print(client.data);
 		
 		if command == 'store':
-			packageName = parameters[1]
+			packageName = str(parameters[1])
 			tempMin = int(parameters[2])
 			tempMax = int(parameters[3])
 			lightMin = int(parameters[4])
 			lightMax = int(parameters[5])
-			# pprint(tempMin)
-			# pprint(tempMax)
-			# pprint(lightMin)
-			# pprint(lightMax)
 			
 			
 			client.sendMessage(u'Found a slot for ' + packageName)
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
-			# gte = greater than or equal to
-			# lte = lesser than or equal to
-			simpleQuery = { "lightSensitivity" : {"$lt" : lightMax}, "lightSensitivity" : {"$gt" : lightMin}, "temperature" : {"$lt" : tempMax}, "temperature" : {"$gt" : tempMin}}
+			simpleQuery = { "lightSensitivity" : {"$lte" : lightMax}, "lightSensitivity" : {"$gte" : lightMin}, "temperature" : {"$lte" : tempMax}, "temperature" : {"$gte" : tempMin}}
 
 			# # #
 			# TODO : MUST SEND parameters[1:5] TO CALLBACK
 			# # #
-			db.slot.find_one(simpleQuery, callback=getSlotDone)
-			ioloop.IOLoop.current().start()
-
-			# Post the item
-			# newItem = [packageName, gotten[1], gotten[2], tempMin, tempMax, lightMin, lightMax, False, None, result[0]]
-			# posted = asyncdb.postItem(newItem)
-
-			# Update slot to slotTaken = True, and itemID. (posted is the ID of the newly inserted item)
-			# gotten[3] = True
-			# gotten[6] = posted
-			# ioloop.IOLoop.current().stop()
-			# updated = asyncdb.updateSlot(gotten[0], gotten[1:6])
-			# updated == 1 => successful
-
+			db.slot.find_one(simpleQuery, callback=storeGetSlotDone)
 			
+			ioloop.IOLoop.current().start() # Goes to storeGetSlotDone when finished
+
 
 		elif command == 'retrieve':
 			packageId = parameters[1]
 			client.sendMessage(u'Package ' + packageId + ' is queued for delivery to the gate. Please be informed');
+
+			retrieveQuery = { "_id" : packageId }
+
+			db.item.find_one(retrieveQuery, callback=retrieveGetItemDone)
+			ioloop.IOLoop.current().start()
 
 
 	def handleConnected(client):
@@ -79,40 +62,60 @@ class SimpleEcho(WebSocket):
 	def handleClose(client):
 		print(client.address, 'closed')
 		
-
-def getSlotDone(result,error):
+# # #
+# MARK - Storing an item, callback functions following each other, in order
+# # #
+def storeGetSlotDone(result,error):
 	print('Slot info is now ready')
 	print('result %s error %s' % (repr(result), repr(error)))
 	slotID = repr(result['_id'])
-	xCoord = repr(result['xCoord'])
-	yCoord = repr(result['yCoord'])
+	xCoord = int(repr(result['xCoord']))
+	yCoord = int(repr(result['yCoord']))
 	#packageName = ??
 	#tempMin = ??
 	#tempMax = ??
 	#lightMin = ??
 	#lightMax = ??
-	# We also need the packageName, tempMin, tempMax, lightMin and lightMax of the item.. HOW?!
+	# We also need the packageName, tempMin, tempMax, lightMin and lightMax of the item..
+	
+	postItemQuery = { "itemName" : "test", "xCoord" : xCoord, "yCoord" : yCoord, "tempMin" : 5, "tempMax" : 10, "lightMin" : 700, "lightMax" : 800, "itemTaken" : True, "robotID" : None, "slotID" : slotID}
+	db.item.insert_one(postItemQuery, callback=storePostItemDone) # Continues to postItemDone
 
-
-	postItemQuery = { "itemName" : "test", "xCoord" : xCoord, "yCoord" : yCoord, "tempMin" : 5, "tempMax" : 10, "lightMin" : 700, "lightMax" : 800, "itemTaken" : False, "robotID" : None, "slotID" : slotID}
-	db.item.insert_one(postItemQuery, callback=postItemDone)
-
-def postItemDone(result,error):
+def storePostItemDone(result,error):
 	print('Item inserted')
 	print('result %s error %s' % (repr(result), repr(error)))
-	itemID = repr(result.inserted_id) # The ID of the inserted item, will now update slot.
+	itemID = repr(result.inserted_id) 
 	# Need the slotID from inserted item
+	# slotID = ?? 
 
-	updateSlotQuery = { "_id" : slotID , "$set" : { "itemID" : itemID } }
-
-	db.slot.update(updateSlotQuery, callback=updateSlotDone)
+	db.slot.update({ "_id" : ObjectId('591442da81aa9d5700e68cdb') }, {"$set" : {"itemID" : itemID} }, callback=storeUpdateSlotDone) # Continues to updateSlotDone
 
 
-def updateSlotDone(result,error):
+def storeUpdateSlotDone(result,error):
 	print('Slot updated')
-	print('result %s error %s' % (repr(result),repr(error)))
+	print('result %s error %s' % (repr(result), repr(error)))
 
-	ioloop.IOLoop.current().stop()
+	ioloop.IOLoop.current().stop() # Update robot and send task to robot 
+
+# # #
+# MARK - Retrieving an item, callbacks in order
+# # #
+def retrieveGetItemDone(result,error):
+	print('Item found')
+	print('result %s error %s' % (repr(result), repr(error)))
+
+	itemToRetrieve = repr(result) # The entire item-document
+	slotID = str(itemToRetrieve['slotID'])
+	#TODO
+	db.item.update(({ "_id" : str(itemToRetrieve["_id"]) }, { "$set" : { "" }}))
+
+
+
+# # #
+# MARK - Robot interaction
+# # #
+
+# TODO: A robot finishes task, (delete) item, update necessary fields
 
 
 if __name__ == '__main__':
