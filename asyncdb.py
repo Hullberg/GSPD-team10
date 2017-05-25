@@ -1,6 +1,7 @@
 from motor import motor_tornado
 from tornado import gen, ioloop
 import time
+from bson.objectid import ObjectId
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 	
@@ -113,18 +114,21 @@ def updateItem(ID,array):
 # # #
 @gen.coroutine
 def main():
-	start = time.time()
-	#res2 = yield getSlot({ "_id" : 591442da81aa9d5700e68cdb })
-	res = yield db.slot.find_one()
-	#print res['_id']
-	res2 = yield db.slot.find_one({"_id" : {"$oid" : "591442da81aa9d5700e68cdb"}}) 
-	print res2
-	print "Hopefully gets item with 700 < light < 800"
-	#print res2['_id'] # No result, as Item is currently empty
-	#res = yield getSlot({"itemID" : ""})
-	#print res
-	end = time.time()
-	print (end-start)
+	# start = time.time()
+	# #res2 = yield getSlot({ "_id" : 591442da81aa9d5700e68cdb })
+	# res = yield db.slot.find_one()
+	# #print res['_id']
+	# res2 = yield db.slot.find_one({"_id" : {"$oid" : "591442da81aa9d5700e68cdb"}}) 
+	# print res2
+	# print "Hopefully gets item with 700 < light < 800"
+	# #print res2['_id'] # No result, as Item is currently empty
+	# #res = yield getSlot({"itemID" : ""})
+	# #print res
+	# end = time.time()
+	# print (end-start)
+	#res = yield db.robot.insert_one({ "robotName" : "someBTAddr", "xCoord" : 137, "yCoord" : 78, "state" : True, "robotTaken" : False, "itemID" : None })
+	res = yield db.slot.find_one({"_id" : ObjectId('591442da81aa9d5700e68cdb') })
+	print res
 
 if __name__ == '__main__':
 	ioloop.IOLoop.instance().run_sync(main)

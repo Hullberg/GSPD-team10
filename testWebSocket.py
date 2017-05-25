@@ -13,10 +13,15 @@ from tornado import ioloop, gen
 from tornado.ioloop import IOLoop
 import time
 from bson.objectid import ObjectId
+from functools import partial
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
 
+
+# # #
+# MARK - Websocket interaction with client
+# # #
 class SimpleEcho(WebSocket):
 
 	def handleMessage(client):
@@ -37,11 +42,9 @@ class SimpleEcho(WebSocket):
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
 			simpleQuery = { "lightSensitivity" : {"$lte" : lightMax}, "lightSensitivity" : {"$gte" : lightMin}, "temperature" : {"$lte" : tempMax}, "temperature" : {"$gte" : tempMin}}
-
-			# # #
-			# TODO : MUST SEND parameters[1:5] TO CALLBACK
-			# # #
-			db.slot.find_one(simpleQuery, callback=storeGetSlotDone)
+			parameters = [packageName, tempMin, tempMax, lightMin, lightMax]
+			callback_function = partial(storeGetSlotDone,parameters)
+			db.slot.find_one(simpleQuery, callback=callback_function)
 			
 			ioloop.IOLoop.current().start() # Goes to storeGetSlotDone when finished
 
@@ -65,37 +68,76 @@ class SimpleEcho(WebSocket):
 # # #
 # MARK - Storing an item, callback functions following each other, in order
 # # #
-def storeGetSlotDone(result,error):
+def storeGetSlotDone(parameters, result, error):
 	print('Slot info is now ready')
 	print('result %s error %s' % (repr(result), repr(error)))
-	slotID = repr(result['_id'])
+	temp = repr(result['_id']).split("'")[1]
+	slotID = ObjectId(temp)
+	print slotID
 	xCoord = int(repr(result['xCoord']))
 	yCoord = int(repr(result['yCoord']))
-	#packageName = ??
-	#tempMin = ??
-	#tempMax = ??
-	#lightMin = ??
-	#lightMax = ??
-	# We also need the packageName, tempMin, tempMax, lightMin and lightMax of the item..
+	packageName = parameters[0]
+	tempMin = parameters[1]
+	tempMax = parameters[2]
+	lightMin = parameters[3]
+	lightMax = parameters[4]
 	
-	postItemQuery = { "itemName" : "test", "xCoord" : xCoord, "yCoord" : yCoord, "tempMin" : 5, "tempMax" : 10, "lightMin" : 700, "lightMax" : 800, "itemTaken" : True, "robotID" : None, "slotID" : slotID}
-	db.item.insert_one(postItemQuery, callback=storePostItemDone) # Continues to postItemDone
+	postItemQuery = { "itemName" : packageName, "xCoord" : xCoord, "yCoord" : yCoord, "tempMin" : tempMin, "tempMax" : tempMax, "lightMin" : lightMin, "lightMax" : lightMax, "itemTaken" : True, "robotID" : None, "slotID" : slotID}
+	callback_function = partial(storePostItemDone, slotID)
+	db.item.insert_one(postItemQuery, callback=callback_function) # Continues to postItemDone
 
-def storePostItemDone(result,error):
+
+def storePostItemDone(parameters, result, error):
 	print('Item inserted')
 	print('result %s error %s' % (repr(result), repr(error)))
-	itemID = repr(result.inserted_id) 
-	# Need the slotID from inserted item
-	# slotID = ?? 
+	temp = repr(result.inserted_id).split("'")[1]
+	itemID = ObjectId(temp)
+	print('itemID %s' % itemID)
+	print('slotID %s' % parameters)
+	slotID = parameters
 
-	db.slot.update({ "_id" : ObjectId('591442da81aa9d5700e68cdb') }, {"$set" : {"itemID" : itemID} }, callback=storeUpdateSlotDone) # Continues to updateSlotDone
+	callback_function = partial(storeUpdateSlotDone,itemID)
+	db.slot.update({ '_id' : slotID }, {"$set" : {"itemID" : itemID, "slotTaken" : True }}, callback=callback_function) # Continues to updateSlotDone
 
 
-def storeUpdateSlotDone(result,error):
+def storeUpdateSlotDone(parameters, result, error):
 	print('Slot updated')
 	print('result %s error %s' % (repr(result), repr(error)))
+	print('itemID %s ' % parameters)
 
-	ioloop.IOLoop.current().stop() # Update robot and send task to robot 
+	# We also want to get a robot to do the work. So find a robot that is free and assign the item to it.
+	# pass itemID to robot creator
+	callback_function = partial(storeFindRobotDone, parameters)
+	# Send it to a robot that is marked as available (and online [state])
+	db.robot.find_one({"state" : True, "robotTaken" : False}, callback=callback_function)
+	
+
+def storeFindRobotDone(parameters, result, error):
+	print('Found robot')
+	print('result %s error %s' % (repr(result), repr(error)))
+	temp = repr(result['_id']).split("'")[1]
+	robotID = ObjectId(temp)
+	params = [parameters, robotID]
+	# Keep sending itemID
+	callback_function = partial(storeUpdateRobotDone, params)
+	db.robot.update({ '_id' : robotID }, {"$set" : {"robotTaken" : True, "itemID" : parameters}}, callback=callback_function)
+	
+def storeUpdateRobotDone(parameters, result, error):
+	print('Robot updated')
+	print('result %s error %s' % (repr(result), repr(error)))
+	print parameters
+	#Update the item, then we're done.
+	# Find item with params[0], set it's robotID to params[1]
+
+	callback_function = partial(storeUpdateItemDone, parameters)
+	db.item.update({ '_id' : parameters[0] }, {"$set" : {"robotID" : parameters[1]}}, callback=callback_function)
+
+def storeUpdateItemDone(parameters, result, error):
+	print('Item updated')
+	print('result %s error %s' % (repr(result), repr(error)))
+	print('Everything went nice')
+	ioloop.IOLoop.current().stop()
+
 
 # # #
 # MARK - Retrieving an item, callbacks in order
@@ -117,7 +159,9 @@ def retrieveGetItemDone(result,error):
 
 # TODO: A robot finishes task, (delete) item, update necessary fields
 
-
+# # #
+# MARK - Main
+# # #
 if __name__ == '__main__':
 	server = SimpleWebSocketServer('', 9000, SimpleEcho)
 	server.serveforever()
