@@ -4,7 +4,7 @@ import lejos.robotics.subsumption.Behavior;
 
 public class CollisionDetector implements Behavior{
 	
-	private Sensors sensors;
+	private Sensors sensors;	
 	@SuppressWarnings("unused")
 	private Boolean suppressed;
 	
@@ -20,9 +20,7 @@ public class CollisionDetector implements Behavior{
 	@Override
 	public void action() {
 		suppressed = false;
-		while(sensors.getDistance() <0.2){
-		}
-		
+		while(sensors.getDistance() < 0.2){	}
 	}
 
 	@Override

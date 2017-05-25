@@ -1,9 +1,11 @@
 package lejosTests;
 
 import lejos.robotics.subsumption.Behavior;
+import lejos.utility.Delay;
 
 public class Movement implements Behavior {
 	private TravelTest traveler;
+	
 	private boolean suppressed;
 	
 	public Movement(TravelTest traveler){
@@ -20,12 +22,18 @@ public class Movement implements Behavior {
 	public void action() {
 		suppressed = false;
 		
-		traveler.getPilot().forward();
+		traveler.getChassis().setVelocity(50d, 0d);
+		
 		
 		while(!suppressed){
+			traveler.followLine();
+			if(traveler.sensors.getColID() == 0){
+				Delay.msDelay(500);
+				traveler.getChassis().rotate(90);
+			}
 			Thread.yield();
 		}
-		traveler.getPilot().stop();
+		traveler.getChassis().stop();
 	}
 
 	@Override

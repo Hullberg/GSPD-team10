@@ -11,10 +11,10 @@ import lejos.robotics.SampleProvider;
 
 public class Sensors{
 	
-	private EV3ColorSensor colorSensor = new EV3ColorSensor(SensorPort.S1);
-	private EV3UltrasonicSensor ultraSonicSensor = new EV3UltrasonicSensor(SensorPort.S3);
+	private EV3ColorSensor colorSensor; 
+	private EV3UltrasonicSensor ultraSonicSensor; 
 	
-	private SampleProvider distance; //= ultraSonicSensor.getDistanceMode();
+	private SampleProvider distance; 
 	private SampleProvider color;  
 	
 	
@@ -22,9 +22,11 @@ public class Sensors{
 	float[] colorSample;
 	
 	public Sensors(){
+		this.ultraSonicSensor =  new EV3UltrasonicSensor(SensorPort.S3);
 		this.distance = ultraSonicSensor.getMode("Distance");
 		this.distanceSample = new float[distance.sampleSize()];
 		
+		this.colorSensor = new EV3ColorSensor(SensorPort.S1);
 		this.color = colorSensor.getMode("RGB");
 		this.colorSample = new float[color.sampleSize()];
 	}

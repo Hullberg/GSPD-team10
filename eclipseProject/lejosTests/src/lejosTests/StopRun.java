@@ -4,6 +4,7 @@ import lejos.hardware.Button;
 import lejos.robotics.subsumption.Behavior;
 
 public class StopRun implements Behavior {
+	@SuppressWarnings("unused")
 	private boolean suppressed;
 	
 	@Override
@@ -14,16 +15,12 @@ public class StopRun implements Behavior {
 	@Override
 	public void action() {
 		suppressed = false;
-		System.exit(0);
-		// TODO Auto-generated method stub
-		
+		System.exit(0);	
 	}
 
 	@Override
 	public void suppress() {
 		suppressed = true;
-		// TODO Auto-generated method stub
-		
 	}
 
 }
