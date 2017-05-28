@@ -32,46 +32,56 @@ void setup() {
   uv.begin();
 
   Serial.println("OK!");
+  BT_Serial.println("BT established!");
 }
 
 void loop() {
    while(BT_Serial.available()>0)
   {//while there is data available on the serial monitor
     message+=char(BT_Serial.read());//store string from serial command
-  }
+  
+  
   if(!BT_Serial.available())
   {
-   
+    Serial.println(message); 
     if(message!=""){//if data is available
-        float result = 0;
+        float result = -1;
             
-      if(message == "get_temp"){       
-        
-        result = dht.readTemperature(); // Read temperature as Celsius (the default)
-      } else if(message == "get_rh"){
-        
+      if(message == "t"){       
+
+        Serial.println("read temperat");
+        result = dht.readTemperature(); // Read temperature as Celsius (the default)         
+      
+      } else if(message == "h"){
+
+        Serial.println("read relative humidity");
         result = dht.readHumidity();
-      }else if(message == "et_vl" ){
         
+      }else if(message == "v" ){
+
+        Serial.println("read visible light"); 
         result = uv.readVisible();  
-      }else if(message == "get_ul"){   
-            
+        
+      }else if(message == "u"){   
+
+        Serial.println("read UV");
         result = uv.readUV();       
+     
       }else{
         
         // if nothing else matches, do the default
-        Serial.write(("command does not match! ")); //show the data
-        Serial.println(("message: " + message));
+        Serial.println("command does not match! " + message);
 
       }
-      
+
+      BT_Serial.println(result);
       message=""; //clear the data
     }
   }
 
   // Wait a few seconds between measurements.
   delay(2000);
-
+}
   /*
   // Check if any reads failed and exit early (to try again).
   if (isnan(h) || isnan(t)){
@@ -81,5 +91,4 @@ void loop() {
  */
 
 }
-
 
