@@ -77,6 +77,7 @@ class SimpleEcho(WebSocket):
 def storeGetSlotDone(parameters, result, error):
 	if (repr(result) == "None"):
 		print('Either all slots are filled, or no slots fulfill the requirements')
+		SimpleEcho.client.sendMessage(u'Either all slots are filled, or no slots fulfill the requirements')
 		# Send back to client it didn't work.
 	else:
 		print('Slot info is now ready')
@@ -155,6 +156,9 @@ def storeUpdateItemDone(parameters, result, error):
 	# [robX, robY, z = 0, x, y, z = 0]
 	coords = [int(parameters[4]), int(parameters[5]), 0, int(parameters[1]), int(parameters[2]), 0]
 	#rob_conn.send_coords(coords)
+	
+	response = sendCoords(coords)
+	print response
 	print('Will now send coords to robot')
 	print coords
 	ioloop.IOLoop.current().stop()
@@ -226,9 +230,18 @@ def retrieveUpdateItemDone(parameters, result, error):
 # MARK - Robot interaction
 # # # #
 
-#bd_addr = "00:16:53:52:1E:34" #EV3 robot address
+bd_addr = "00:16:53:52:1E:34" #EV3 robot address
 
-#rob_conn = robot_conn.RobotConnection(bd_addr) # Uses robot_conn.py to initiate connection to the EV3 robot
+rob_conn = robot_conn.RobotConnection(bd_addr) # Uses robot_conn.py to initiate connection to the EV3 robot
+
+def funcone(coords, callback=None):
+	return callback(rob_conn.send_coords(coords))
+
+@gen.engine
+def sendCoords(coords):
+	response = yield gen.Task(funcone, coords)
+	return response
+
 
 # USE Robot - Server API to send tasks.
 # TODO: A robot finishes task, (delete) item, update necessary fields
