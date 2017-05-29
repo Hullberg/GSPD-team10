@@ -1,5 +1,6 @@
 package lejosTests;
 
+import lejos.hardware.lcd.LCD;
 import lejos.robotics.subsumption.Behavior;
 import lejos.utility.Delay;
 
@@ -74,6 +75,7 @@ public class Movement implements Behavior {
 			}
 			else{
 				getTask();
+				LCD.drawString("got coords",0, 6);
 			}
 			Thread.yield();
 		}
