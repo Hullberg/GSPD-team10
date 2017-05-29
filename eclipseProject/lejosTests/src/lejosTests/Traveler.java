@@ -18,7 +18,7 @@ import lejos.robotics.navigation.RotateMoveController;
  * From https://lejosnews.wordpress.com/2015/01/17/lejos-navigation-pilots/
  *  Wheeled chassis from https://lejosnews.wordpress.com/2015/05/12/lejos-navigation-the-chassis/
  */
-public class TravelTest {
+public class Traveler {
 
 	private static final double WHEEL_SIZE_EV3 = 56;
 	private RotateMoveController pilot;
@@ -32,7 +32,7 @@ public class TravelTest {
 
 	Sensors sensors = new Sensors();
 	
-	public TravelTest(){
+	public Traveler(){
 
 		this.pilot = new MovePilot(chassis);
 		this.arm = new EV3MediumRegulatedMotor(MotorPort.D);

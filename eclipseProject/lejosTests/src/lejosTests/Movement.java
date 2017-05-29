@@ -4,11 +4,17 @@ import lejos.robotics.subsumption.Behavior;
 import lejos.utility.Delay;
 
 public class Movement implements Behavior {
-	private TravelTest traveler;
+	private Traveler traveler;
 	
 	private boolean suppressed;
 	
-	public Movement(TravelTest traveler){
+	
+	private int x;
+	private int y;
+	
+	private boolean taskActive;
+	
+	public Movement(Traveler traveler){
 		
 		this.traveler = traveler;
 	}
@@ -28,8 +34,9 @@ public class Movement implements Behavior {
 		while(!suppressed){
 			traveler.followLine();
 			if(traveler.sensors.getColID() == 0){
-				Delay.msDelay(500);
-				traveler.getChassis().rotate(90);
+				//Delay.msDelay(500);
+				traveler.getChassis().setVelocity(0d, 90d);
+				Delay.msDelay(1000);
 			}
 			Thread.yield();
 		}
