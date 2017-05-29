@@ -14,7 +14,7 @@ from tornado.ioloop import IOLoop
 import time
 from bson.objectid import ObjectId
 from functools import partial
-#import robot_conn
+import robot_conn
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
@@ -30,15 +30,15 @@ class SimpleEcho(WebSocket):
 		command = parameters[0]
 
 		print(client.data);
-		
+
 		if command == 'store':
 			packageName = str(parameters[1])
 			tempMin = int(parameters[2])
 			tempMax = int(parameters[3])
 			lightMin = int(parameters[4])
 			lightMax = int(parameters[5])
-			
-			
+
+
 			client.sendMessage(u'Found a slot for ' + packageName)
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
@@ -46,7 +46,7 @@ class SimpleEcho(WebSocket):
 			parameters = [packageName, tempMin, tempMax, lightMin, lightMax]
 			callback_function = partial(storeGetSlotDone,parameters)
 			db.slot.find_one(simpleQuery, callback=callback_function)
-			
+
 			ioloop.IOLoop.current().start() # Goes to storeGetSlotDone when finished
 
 
@@ -54,7 +54,7 @@ class SimpleEcho(WebSocket):
 			packageId = parameters[1]
 			client.sendMessage(u'Package ' + packageId + ' is queued for delivery to the gate. Please be informed');
 			# The ID is simply a string in front-end, convert to ObjectId
-			
+
 
 			pckID = ObjectId(packageId)
 			print pckID
@@ -70,7 +70,7 @@ class SimpleEcho(WebSocket):
 
 	def handleClose(client):
 		print(client.address, 'closed')
-		
+
 # # # #
 # MARK - Storing an item, callback functions following each other, in order
 # # # #
@@ -92,7 +92,7 @@ def storeGetSlotDone(parameters, result, error):
 	tempMax = parameters[2]
 	lightMin = parameters[3]
 	lightMax = parameters[4]
-	
+
 	params = [slotID, xCoord, yCoord]
 
 	postItemQuery = { "itemName" : packageName, "xCoord" : xCoord, "yCoord" : yCoord, "tempMin" : tempMin, "tempMax" : tempMax, "lightMin" : lightMin, "lightMax" : lightMax, "itemTaken" : True, "robotID" : None, "slotID" : slotID}
@@ -121,7 +121,7 @@ def storeUpdateSlotDone(parameters, result, error):
 	callback_function = partial(storeFindRobotDone, parameters)
 	# Send it to a robot that is marked as available (and online [state])
 	db.robot.find_one({"state" : True, "robotTaken" : False}, callback=callback_function)
-	
+
 
 def storeFindRobotDone(parameters, result, error):
 	print('Found robot')
@@ -135,7 +135,7 @@ def storeFindRobotDone(parameters, result, error):
 	# Keep sending itemID
 	callback_function = partial(storeUpdateRobotDone, params)
 	db.robot.update({ '_id' : robotID }, {"$set" : {"robotTaken" : True, "itemID" : parameters[0]}}, callback=callback_function)
-	
+
 def storeUpdateRobotDone(parameters, result, error):
 	print('Robot updated')
 	print('result %s error %s' % (repr(result), repr(error)))
@@ -156,7 +156,7 @@ def storeUpdateItemDone(parameters, result, error):
 	# [robX, robY, z = 0, x, y, z = 0]
 	coords = [int(parameters[4]), int(parameters[5]), 0, int(parameters[1]), int(parameters[2]), 0]
 	#rob_conn.send_coords(coords)
-	
+
 	response = sendCoords(coords)
 	print response
 	print('Will now send coords to robot')
@@ -206,14 +206,14 @@ def retrieveUpdateRobotDone(parameters, result, error):
 	# Update slot
 	callback_function = partial(retrieveUpdateSlotDone, parameters)
 	db.slot.update({ '_id' : parameters[1] }, { "$set" : { "slotTaken" : False, "itemID" : None }}, callback = callback_function)
-	
+
 
 def retrieveUpdateSlotDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(error)))
 	# Lastly update item
 	callback_function = partial(retrieveUpdateItemDone, parameters)
 	db.item.update({ '_id' : parameters[0]}, { "$set" : { "robotID" : parameters[4], "slotID" : None }}, callback = callback_function)
-	
+
 
 def retrieveUpdateItemDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(result)))
@@ -239,8 +239,8 @@ def funcone(coords, callback=None):
 
 @gen.engine
 def sendCoords(coords):
-	response = yield gen.Task(funcone, coords)
-	return response
+        gen.Task(funcone, coords)
+
 
 
 # USE Robot - Server API to send tasks.
