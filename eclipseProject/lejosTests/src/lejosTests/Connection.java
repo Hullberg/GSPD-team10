@@ -52,13 +52,13 @@ public class Connection {
 		try {
 			dis.read(buf, 0, 64);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+	
 			e.printStackTrace();
 		}
 		
 		for(int i = 0; i < 6; i++ ){
 	    	coords[i] = ByteBuffer.wrap(buf).getInt((4*i)); //read one int at a time from the bytebuffer   	
-	    	LCD.drawInt(coords[i], 4, i+2); //print them (debug)
+	    //	LCD.drawInt(coords[i], 4, i+2); //print them (debug)
 		}
 		return coords;
 	}
@@ -68,7 +68,6 @@ public class Connection {
 		try {
 			dis.read(buf, 0, 64);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		i = ByteBuffer.wrap(buf).getInt();
@@ -94,7 +93,6 @@ public class Connection {
 			dos.write(buf, 0, 12);
 			dos.flush();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -110,7 +108,6 @@ public class Connection {
 		 dos.writeInt(i);
 		 dos.flush();
 	} catch (IOException e) {
-		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
 	  
@@ -129,7 +126,6 @@ public class Connection {
 		dis.close();
 		dos.close();
 	} catch (IOException e) {
-		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
 	   
