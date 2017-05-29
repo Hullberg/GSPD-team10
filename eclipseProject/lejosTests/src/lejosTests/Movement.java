@@ -1,5 +1,6 @@
 package lejosTests;
 
+import lejos.hardware.lcd.LCD;
 import lejos.robotics.subsumption.Behavior;
 import lejos.utility.Delay;
 
@@ -52,9 +53,8 @@ public class Movement implements Behavior {
 	@Override
 	public void action() {
 		suppressed = false;
-
-		traveler.getChassis().setVelocity(50d, 0d);
-
+		
+		
 
 		while(!suppressed){
 
@@ -74,6 +74,7 @@ public class Movement implements Behavior {
 			}
 			else{
 				getTask();
+				LCD.drawString("got coords",0, 6);
 			}
 			Thread.yield();
 		}
@@ -88,7 +89,9 @@ public class Movement implements Behavior {
 
 
 	public void getTask(){
+		LCD.drawString("getting task", 0, 3);
 		int[] coords = conn.readCoordinates();
+		LCD.drawString("got task", 0, 4);  
 
 		setTargetX(coords[0]);
 		setTargetY(coords[1]);

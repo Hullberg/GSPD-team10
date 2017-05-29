@@ -107,13 +107,13 @@ public class Traveler {
 	
 	public void followLine(){
 			
-		// turn right if blue 
-		if(sensors.getColID() == 2){
+		// turn right if white 
+		if(sensors.getColID() == 6){
 			LCD.drawInt(2, 4, 4);
 			chassis.setVelocity(50d, 5d);
 		}
-		// turn left if green
-		else if (sensors.getColID() == 1){
+		// turn left if black
+		else if (sensors.getColID() == 7){
 			LCD.drawInt(1, 4, 4);
 			chassis.setVelocity(50d, -5d);
 		}
