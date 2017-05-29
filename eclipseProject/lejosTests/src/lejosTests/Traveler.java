@@ -81,7 +81,7 @@ public class Traveler {
 		turnLeft();
 
 	}
-
+/*  Probably not needed
 	public void takeThreeCommands(Connection conn){
 		
 		for(int i = 0; i<3; i++){
@@ -103,7 +103,7 @@ public class Traveler {
 		}
 
 		
-	}
+	} */
 	
 	public void followLine(){
 			

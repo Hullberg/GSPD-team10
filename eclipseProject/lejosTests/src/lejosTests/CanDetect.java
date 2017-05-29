@@ -8,8 +8,9 @@ public class CanDetect {
 	
 	public static void main(String[] args){
 		Traveler traveler = new Traveler();
+		Connection conn = new Connection();
 		
-		Behavior move = new Movement(traveler);
+		Behavior move = new Movement(traveler, conn);
 		Behavior detect = new CollisionDetector(traveler.sensors);	
 		Behavior stop = new StopRun();
 		
