@@ -77,13 +77,29 @@ class ardnet(object):
     def get_temperature(self,location):
         for x in self.units:
             if x.location == location:
-                return x.get_temp()
-    
+                temp = x.get_temp()
+                return float(temp)
+            
     def get_visual_light(self,location):
         for x in self.units:
             if x.location == location:
-                return x.get_vl()
+                temp = x.get_vl()
+                return float(temp)
 
+            
+    def get_ultraviolet(self,location):
+        for x in self.units:
+            if x.location == location:
+                temp = x.get_uv()
+                return float(temp)
+
+            
+    def get_relative_humidity(self,location):
+        for x in self.units:
+            if x.location == location:
+                temp = x.get_rh()
+                return float(temp)
+            
     def list_all(self):
         retval = []
         for x in self.units:
