@@ -9,7 +9,8 @@ public class Movement implements Behavior {
 	private Connection conn; 
 
 	private boolean suppressed;
-
+	
+	int[] taskCoordinates = new int[6];
 
 	private int targetX;
 	private int targetY;
@@ -37,7 +38,7 @@ public class Movement implements Behavior {
 
 	private boolean movingInX  = true;
 
-	private boolean returning;
+	private boolean returning = false;
 
 	public Movement(Traveler traveler, Connection conn){
 
@@ -60,13 +61,17 @@ public class Movement implements Behavior {
 
 			if(taskActive){
 				traveler.followLine();
+				if(currentX == targetX && currentY == targetY){
+					targetX = taskCoordinates[3];
+					targetY = taskCoordinates[4];
+				}
 				if(traveler.sensors.getColID() == 0){
 					incrementPosition();		
 
 					if(shouldRobotTurn()){
 						//Delay.msDelay(500);
-						traveler.getChassis().setVelocity(0d, 90d);
-						Delay.msDelay(1000);
+						traveler.getChassis().setVelocity(0d, -90d);
+						//Delay.msDelay(1000);
 						movingInX = !movingInX;
 					}
 				}
@@ -90,11 +95,14 @@ public class Movement implements Behavior {
 
 	public void getTask(){
 		LCD.drawString("getting task", 0, 3);
-		int[] coords = conn.readCoordinates();
+		taskCoordinates = conn.readCoordinates();
 		LCD.drawString("got task", 0, 4);  
-
-		setTargetX(coords[0]);
-		setTargetY(coords[1]);
+		
+		setCurrentX(0);
+		setCurrentY(0);
+		
+		setTargetX(taskCoordinates[0]);
+		setTargetY(taskCoordinates[1]);
 
 		taskActive = true;
 	}
