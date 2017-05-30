@@ -266,6 +266,31 @@ def RobotTaskDone():
 
 # Retrieve light / temperature and update the slots in the database.
 
+global retrievedSlots
+global amtSlots
+
+def updateDB(temp, light):
+	counter = 0
+	params = [temp,light,counter]
+	callback_function = partial(updateSlots, params)
+	db.slot.find({},callback=callback_function).to_list(None)
+	ioloop.IOLoop.current().start()
+
+def updateSlots(parameters, result, error):
+	# Result is the list of all slots.
+	if parameters[2] == 0:
+		# Counter = 0 => first time
+		retrievedSlots = repr(result)
+		amtSlots = len(retrievedSlots)
+
+	# Look at the element counter, take the ID of that slot, and update it's temperature and light to what was given from arduino
+	if parameters[2] < amtSlots:
+		parameters[2] = parameters[2] + 1
+		callback_function = partial(updateSlots, parameters)
+		db.slot.update({ '_id' : retrievedSlots[parameters[2]-1]['_id']]}, { "$set" : { "lightSensitivity" : parameters[1], "temperature" : parameters[0]}}, callback=callback_function)
+
+
+
 
 # # # # # # # # # # # # # # # # # #
 # MARK - Misc.
