@@ -12,8 +12,13 @@ class ardunit(object):
     last_rh = -1
     
     def __init__(self, port, bauderate, position):
-        self.ser = serial.Serial("COM7", 57600, timeout=0)
+        self.ser = serial.Serial(port, bauderate, timeout=0)
         self.location = position
+
+        self.port = port
+        self.baude = bauderate
+        self.ID = position
+        
     def get_temp(self):
 
         try:
@@ -37,9 +42,28 @@ class ardunit(object):
             print('Data could not be read')
 
     def get_uv(self):
-        print("TODO");
+
+         try:
+            self.ser.write('u')
+            time.sleep(1)
+            self.last_uv = self.ser.readline()
+            return self.last_uv
+        
+        except self.ser.SerialTimeoutException:
+            print('Data could not be read')
+
     def get_rh(self):
-        print("TODO");
+
+        
+         try:
+            self.ser.write('h')
+            time.sleep(1)
+            self.last_rh = self.ser.readline()
+            return self.last_rh
+        
+        except self.ser.SerialTimeoutException:
+            print('Data could not be read')
+
         
 class ardnet(object):
 
