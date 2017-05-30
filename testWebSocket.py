@@ -19,10 +19,13 @@ import robot_conn
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
 
+global itemsInDB
+global amt
 
-# # # #
+# # # # # # # # # # # # # # # # # #
 # MARK - Websocket interaction with client
-# # # #
+# # # # # # # # # # # # # # # # # #
+
 class SimpleEcho(WebSocket):
 
 	def handleMessage(client):
@@ -39,7 +42,7 @@ class SimpleEcho(WebSocket):
 			lightMax = int(parameters[5])
 
 
-			client.sendMessage(u'Found a slot for ' + packageName)
+			client.sendMessage(u'Searching for a slot for ' + packageName)
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
 			simpleQuery = { "lightSensitivity" : {"$lte" : lightMax}, "lightSensitivity" : {"$gte" : lightMin}, "temperature" : {"$lte" : tempMax}, "temperature" : {"$gte" : tempMin}}
@@ -67,13 +70,18 @@ class SimpleEcho(WebSocket):
 
 	def handleConnected(client):
 		print(client.address, 'connected')
+		print(itemsInDB)
+		client.sendMessage(itemsInDB) # Send all items in the database to the client. To know what to retrieve
+		
 
 	def handleClose(client):
 		print(client.address, 'closed')
 
-# # # #
+
+# # # # # # # # # # # # # # # # # #
 # MARK - Storing an item, callback functions following each other, in order
-# # # #
+# # # # # # # # # # # # # # # # # #
+
 def storeGetSlotDone(parameters, result, error):
 	if (repr(result) == "None"):
 		print('Either all slots are filled, or no slots fulfill the requirements')
@@ -155,7 +163,6 @@ def storeUpdateItemDone(parameters, result, error):
 	print parameters
 	# [robX, robY, z = 0, x, y, z = 0]
 	coords = [int(parameters[4]), int(parameters[5]), 0, int(parameters[1]), int(parameters[2]), 0]
-	#rob_conn.send_coords(coords)
 
 	response = sendCoords(coords)
 	print response
@@ -164,9 +171,10 @@ def storeUpdateItemDone(parameters, result, error):
 	ioloop.IOLoop.current().stop()
 
 
-# # # #
+# # # # # # # # # # # # # # # # # #
 # MARK - Retrieving an item, callbacks in order
-# # # #
+# # # # # # # # # # # # # # # # # #
+
 def retrieveGetItemDone(parameters, result, error):
 	print('Item found')
 	print('result %s error %s' % (repr(result), repr(error)))
@@ -219,18 +227,22 @@ def retrieveUpdateItemDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(result)))
 	# Item is updated, send task to robot.
 	print(parameters)
-	# TODO
 	# From and to [robX, robY, z=0, itemX, itemY, z=0]
 	coords = [parameters[5], parameters[6], 0, parameters[2], parameters[3], 0]
-	#rob_conn.send_coords(coords)
+	
+	response = sendCoords(coords)
+	print response
+	print('Will now send coords to robot')
+	# As we do not expect any return value, we just send it and hope it works. Usually does.
+	print coords
 	ioloop.IOLoop.current().stop()
 
 
-# # # #
+# # # # # # # # # # # # # # # # # #
 # MARK - Robot interaction
-# # # #
+# # # # # # # # # # # # # # # # # #
 
-bd_addr = "00:16:53:52:1E:34" #EV3 robot address
+bd_addr = "00:16:53:52:1E:34" #EV3 robot bluetooth address
 
 rob_conn = robot_conn.RobotConnection(bd_addr) # Uses robot_conn.py to initiate connection to the EV3 robot
 
@@ -241,22 +253,39 @@ def funcone(coords, callback=None):
 def sendCoords(coords):
         gen.Task(funcone, coords)
 
-
+def RobotTaskDone():
+	print("Job's done")
 
 # USE Robot - Server API to send tasks.
 # TODO: A robot finishes task, (delete) item, update necessary fields
 
 
-# # # #
+# # # # # # # # # # # # # # # # # #
 # MARK - Arduino connection
-# # # #
+# # # # # # # # # # # # # # # # # #
 
 # Retrieve light / temperature and update the slots in the database.
 
 
-# # # #
+# # # # # # # # # # # # # # # # # #
+# MARK - Misc.
+# # # # # # # # # # # # # # # # # #
+
+def getAllItems():
+	# Get all items in db and send to client
+	temp = yield db.slot.find({}).to_list(None)
+	amt = len(temp)
+	itemsInDB = []
+	for x in range(0,amt):
+		itemsInDB.append([str(temp[x]['_id']), str(temp[x]['itemName']), str(temp[x]['xCoord']), str(temp[x]['yCoord'])])
+	# Use these when connecting to client.
+
+# # # # # # # # # # # # # # # # # #
 # MARK - Main
-# # # #
+# # # # # # # # # # # # # # # # # #
 if __name__ == '__main__':
+
+	getAllItems()
+
 	server = SimpleWebSocketServer('', 9000, SimpleEcho)
 	server.serveforever()
