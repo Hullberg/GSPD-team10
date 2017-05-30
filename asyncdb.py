@@ -127,8 +127,12 @@ def main():
 	# end = time.time()
 	# print (end-start)
 	#res = yield db.robot.insert_one({ "robotName" : "someBTAddr", "xCoord" : 137, "yCoord" : 78, "state" : True, "robotTaken" : False, "itemID" : None })
-	res = yield db.slot.find_one({"_id" : ObjectId('591442da81aa9d5700e68cdb') })
-	print res
+	
+	# USE THIS TO FIND ITEMS WHEN STARTING CLIENT
+	res = yield db.slot.find({}).to_list(None) # No requirement on length
+	l = len(res)
+	for x in range (0,l):
+		print(res[x]['_id']) # Here we can retrieve whatever attributes we want and send to client.
 
 if __name__ == '__main__':
 	ioloop.IOLoop.instance().run_sync(main)
