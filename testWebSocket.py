@@ -60,7 +60,6 @@ class SimpleEcho(WebSocket):
 			# The ID is simply a string in front-end, convert to ObjectId
 
 			pckID = ObjectId(packageId)
-			print pckID
 			callback_function = partial(retrieveGetItemDone, pckID)
 
 			db.item.find_one({ "_id" : pckID }, callback=callback_function)
@@ -155,11 +154,25 @@ def storeUpdateItemDone(parameters, result, error):
 	print('Item updated')
 	print('result %s error %s' % (repr(result), repr(error)))
 	# Parameters = [itemID, x,y, robotID, robX, robY]
-	# [robX, robY, z = 0, x, y, z = 0]
-	coords = [int(parameters[4]), int(parameters[5]), 0, int(parameters[1]), int(parameters[2]), 0]
+	# When doing a store, the robot will always be at (0,0,0)
+	coords = [0, 0, 0, int(parameters[1]), int(parameters[2]), 0]
 
 	response = sendCoords(coords)
 	print('Coordinates sent to the robot')
+	# # #
+	# MARK: Everything above works in the callback-chain
+	# # # 
+	resp2 = yield getTaskDone()
+	if resp2 == 1:
+		# Robot done
+		# Robot available parameters[3]
+		callback_function = partial(storeRobotIsDone, parameters)
+		db.robot.update({ '_id' : parameters[3] }, { "$set" : { "itemID" : None, "robotTaken" : False } }, callback = callback_function)
+
+	
+def storeRobotIsDone(parameters, result, error):
+	print('Robot is now set to free!')
+	print('result %s error %s' % (repr(result), repr(error)))
 	ioloop.IOLoop.current().stop()
 
 
@@ -218,12 +231,39 @@ def retrieveUpdateSlotDone(parameters, result, error):
 def retrieveUpdateItemDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(result)))
 	# Item is updated, send task to robot.
-	# From and to [robX, robY, z=0, itemX, itemY, z=0]
-	coords = [parameters[5], parameters[6], 0, parameters[2], parameters[3], 0]
+	# parameters = [itemID, slotID, xCoord, yCoord, robotID, robX, robY]
+	# When doing a retrieve robot will always go to (0,0,0)
+	coords = [parameters[5],parameters[6],0,0,0,0]
 
 	response = sendCoords(coords)
-	print('Coordinates sent to robot')
 	# As we do not expect any return value, we just send it and hope it works. Usually does.
+	print('Coordinates sent to robot')
+	
+	# # #
+	# MARK: Everything above works in the callback-chain
+	# # #
+	resp2 = yield getTaskDone()
+	if resp2 == 1:
+		# Robot done.
+		callback_function = partial(retrieveRobotDoneRestoreRobot,parameters)
+		db.robot.update({ "_id" : parameters[4] }, { "$set" : { "itemID" : None, "robotTaken" : False } })
+	
+def retrieveRobotDoneRestoreRobot(parameters, result, error):
+	print('result %s error %s' % (repr(result), repr(result)))
+	print('Robot cleansed, time to remove item and cleanse slot')
+	callback_function = partial(retrieveRobotDoneRestoreSlot,parameters)
+	db.slot.update({ "_id" : parameters[1] }, { "$set" : { "itemID" : None, "slotTaken" : False } }, callback=callback_function)
+
+def retrieveRobotDoneRestoreSlot(parameters, result, error):
+	print('result %s error %s' % (repr(result), repr(result)))
+	print('Slot cleansed, time to remove item')
+	callback_function = partial(retrieveRobotDoneRemovedItem, parameters)
+	# No method for deleting one, but if we use ID we're safe
+	db.item.delete_many({ "_id" : parameters[0] },callback=callback_function)
+
+def retrieveRobotDoneRemovedItem(parameters, result, error):
+	print('result %s error %s' % (repr(result), repr(result)))
+	print('Item removed. All is good in the world')
 	ioloop.IOLoop.current().stop()
 
 
@@ -242,21 +282,12 @@ def asyncSendCoords(coords, callback=None):
 def sendCoords(coords):
 	gen.Task(asyncSendCoords, coords)
 
-#def RobotTaskDone(): # TODO Receive message from robot it's done, update db accordingly
-#	print("Job's done")
-
-# USE Robot - Server API to send tasks.
-# TODO: A robot finishes task, (delete) item, update necessary fields
-def waitForRobot():
-	coords = rob_conn.recv_coords()
-	# Update the robot to free, 
-
-def asyncRobotDone(bleh, callback=None):
-	return callback(waitForRobot())
+def asyncGetTaskDone():
+	return callback(rob_conn.recv_int())
 
 @gen.engine
-def robotTaskDone():
-	gen.Task(asyncRobotDone, "")
+def getTaskDone():
+	gen.task(asyncGetTaskDone)
 
 
 # # # # # # # # # # # # # # # # # #
@@ -266,39 +297,39 @@ def robotTaskDone():
 # Retrieve light / temperature and update the slots in the database.
 # TODO
 
-def asyncUpdateSlotDB(callback=None):
-	# Create ardunit
-	# ard = ardunit("?", 57600, "at")
-	# Should be arduino measurements instead of temps.
-	# temptemp = ard.get_temp()
-	# templight = ard.getvl()
-	temptemp = 20
-	templight = 800
-	listOfSlots = yield db.slot.find({}).to_list(None)
-	for x in range(0,len(listOfSlots))
-		db.slot.update({ "_id" : listOfSlots[x]['_id'] }, { "$set" : { "temperature" : temptemp, "lightSensitivity" : templight }})
-	return callback("done")
+# def asyncUpdateSlotDB(callback=None):
+# 	# Create ardunit
+# 	# ard = ardunit("?", 57600, "at")
+# 	# Should be arduino measurements instead of temps.
+# 	# temptemp = ard.get_temp()
+# 	# templight = ard.getvl()
+# 	temptemp = 20
+# 	templight = 800
+# 	listOfSlots = yield db.slot.find({}).to_list(None)
+# 	for x in range(0,len(listOfSlots))
+# 		db.slot.update({ "_id" : listOfSlots[x]['_id'] }, { "$set" : { "temperature" : temptemp, "lightSensitivity" : templight }})
+# 	return callback("done")
 
-@gen.engine
-def updateSlotDB():
-	gen.Task(asyncUpdateSlotDB)
+# @gen.engine
+# def updateSlotDB():
+# 	gen.Task(asyncUpdateSlotDB)
 
 
 # # # # # # # # # # # # # # # # # #
 # MARK - Misc.
 # # # # # # # # # # # # # # # # # #
 
-def asyncGetItems(callback=None):
-	temp = yield db.slot.find({}).to_list(None)
-	amt = len(temp)
-	itemsInDB = []
-	for x in range(0,amt):
-		itemsInDB.append([str(temp[x]['_id']), str(temp[x]['itemName']), str(temp[x]['xCoord']), str(temp[x]['yCoord'])])
-	return callback(itemsInDB)
+# def asyncGetItems(callback=None):
+# 	temp = yield db.slot.find({}).to_list(None)
+# 	amt = len(temp)
+# 	itemsInDB = []
+# 	for x in range(0,amt):
+# 		itemsInDB.append([str(temp[x]['_id']), str(temp[x]['itemName']), str(temp[x]['xCoord']), str(temp[x]['yCoord'])])
+# 	return callback(itemsInDB)
 
-@gen.engine
-def getAllItems():
-		gen.Task(asyncGetItems)
+# @gen.engine
+# def getAllItems():
+# 		gen.Task(asyncGetItems)
 
 # # # # # # # # # # # # # # # # # #
 # MARK - Main
