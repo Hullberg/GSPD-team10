@@ -69,10 +69,10 @@ class SimpleEcho(WebSocket):
 
 
 	def handleConnected(client):
-		print(client.address, 'connected')
-		print(itemsInDB)
+		# print(client.address, 'connected')
+		# print(itemsInDB)
 		client.sendMessage(itemsInDB) # Send all items in the database to the client. To know what to retrieve
-		
+
 
 	def handleClose(client):
 		print(client.address, 'closed')
@@ -229,7 +229,7 @@ def retrieveUpdateItemDone(parameters, result, error):
 	print(parameters)
 	# From and to [robX, robY, z=0, itemX, itemY, z=0]
 	coords = [parameters[5], parameters[6], 0, parameters[2], parameters[3], 0]
-	
+
 	response = sendCoords(coords)
 	print response
 	print('Will now send coords to robot')
@@ -269,25 +269,25 @@ def RobotTaskDone():
 global retrievedSlots
 global amtSlots
 
-def updateDB(temp, light):
-	counter = 0
-	params = [temp,light,counter]
-	callback_function = partial(updateSlots, params)
-	db.slot.find({},callback=callback_function).to_list(None)
-	ioloop.IOLoop.current().start()
+# def updateDB(temp, light):
+# 	counter = 0
+# 	params = [temp,light,counter]
+# 	callback_function = partial(updateSlots, params)
+# 	db.slot.find({},callback=callback_function).to_list(None)
+# 	ioloop.IOLoop.current().start()
 
-def updateSlots(parameters, result, error):
-	# Result is the list of all slots.
-	if parameters[2] == 0:
-		# Counter = 0 => first time
-		retrievedSlots = repr(result)
-		amtSlots = len(retrievedSlots)
+# def updateSlots(parameters, result, error):
+# 	# Result is the list of all slots.
+# 	if parameters[2] == 0:
+# 		# Counter = 0 => first time
+# 		retrievedSlots = repr(result)
+# 		amtSlots = len(retrievedSlots)
 
-	# Look at the element counter, take the ID of that slot, and update it's temperature and light to what was given from arduino
-	if parameters[2] < amtSlots:
-		parameters[2] = parameters[2] + 1
-		callback_function = partial(updateSlots, parameters)
-		db.slot.update({ '_id' : retrievedSlots[parameters[2]-1]['_id']]}, { "$set" : { "lightSensitivity" : parameters[1], "temperature" : parameters[0]}}, callback=callback_function)
+# 	# Look at the element counter, take the ID of that slot, and update it's temperature and light to what was given from arduino
+# 	if parameters[2] < amtSlots:
+# 		parameters[2] = parameters[2] + 1
+# 		callback_function = partial(updateSlots, parameters)
+# 		db.slot.update({ '_id' : retrievedSlots[parameters[2]-1]['_id']]}, { "$set" : { "lightSensitivity" : parameters[1], "temperature" : parameters[0]}}, callback=callback_function)
 
 
 
@@ -296,14 +296,14 @@ def updateSlots(parameters, result, error):
 # MARK - Misc.
 # # # # # # # # # # # # # # # # # #
 
-def getAllItems():
-	# Get all items in db and send to client
-	temp = yield db.slot.find({}).to_list(None)
-	amt = len(temp)
-	itemsInDB = []
-	for x in range(0,amt):
-		itemsInDB.append([str(temp[x]['_id']), str(temp[x]['itemName']), str(temp[x]['xCoord']), str(temp[x]['yCoord'])])
-	# Use these when connecting to client.
+# def getAllItems():
+# 	# Get all items in db and send to client
+# 	temp = yield db.slot.find({}).to_list(None)
+# 	amt = len(temp)
+# 	itemsInDB = []
+# 	for x in range(0,amt):
+# 		itemsInDB.append([str(temp[x]['_id']), str(temp[x]['itemName']), str(temp[x]['xCoord']), str(temp[x]['yCoord'])])
+# 	# Use these when connecting to client.
 
 # # # # # # # # # # # # # # # # # #
 # MARK - Main
