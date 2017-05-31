@@ -155,25 +155,20 @@ def storeUpdateItemDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(error)))
 	# Parameters = [itemID, x,y, robotID, robX, robY]
 	# When doing a store, the robot will always be at (0,0,0)
-	coords = [0, 0, 0, int(parameters[1]), int(parameters[2]), 0]
+	
 
+	# We have tested and know the robot will get the task. Update database before
+	# However, tasks can then be overridden, caution.
+	callback_function = partial(storeUpdateRobotSecond, parameters)
+	db.robot.update({ '_id' : parameters[3] }, { "$set" : { "robotTaken" : False, "itemID" : None }}, callback = callback_function)
+
+def storeUpdateRobotSecond(parameters, result, error):
+	print('Robot is available, be cautious')
+	coords = [0, 0, 0, int(parameters[1]), int(parameters[2]), 0]
 	response = sendCoords(coords)
 	print('Coordinates sent to the robot')
-	# # #
-	# MARK: Everything above works in the callback-chain
-	# # #
-# 	resp2 = yield getTaskDone()
-# 	if resp2 == 1:
-# 		# Robot done
-# 		# Robot available parameters[3]
-# 		callback_function = partial(storeRobotIsDone, parameters)
-# 		db.robot.update({ '_id' : parameters[3] }, { "$set" : { "itemID" : None, "robotTaken" : False } }, callback = callback_function)
-
-
-# def storeRobotIsDone(parameters, result, error):
-# 	print('Robot is now set to free!')
-# 	print('result %s error %s' % (repr(result), repr(error)))
-# 	ioloop.IOLoop.current().stop()
+	ioloop.IOLoop.current().stop()
+	
 
 
 # # # # # # # # # # # # # # # # # #
@@ -234,38 +229,28 @@ def retrieveUpdateItemDone(parameters, result, error):
 	# Item is updated, send task to robot.
 	# parameters = [itemID, slotID, xCoord, yCoord, robotID, robX, robY]
 	# When doing a retrieve robot will always go to (0,0,0)
+
+	callback_function = partial(retrieveUpdateRobotSecond, parameters)
+	db.robot.update({ "_id" : parameters[4] }, { "$set" : { "robotTaken" : False, "itemID" : None } })
+
+
+def retrieveUpdateRobotSecond(parameters, result, error):
+	print('Robot available for new work, caution')
+
+	callback_function = partial(retrieveRemoveItem, parameters)
+	db.item.delete_many({ "_id" : parameters[0] }, callback=callback_function)
+
+
+def retrieveRemoveItem(parameters, result, error):
+	print('Item removed from database')
+	print('Robot will now get task')
 	coords = [int(parameters[2]),int(parameters[3]),0,0,0,0]
 
 	response = sendCoords(coords)
 	# As we do not expect any return value, we just send it and hope it works. Usually does.
 	print('Coordinates sent to robot')
+	ioloop.IOLoop.current().stop()
 
-	# # #
-	# MARK: Everything above works in the callback-chain
-	# # #
-# 	resp2 = yield getTaskDone()
-# 	if resp2 == 1:
-# 		# Robot done.
-# 		callback_function = partial(retrieveRobotDoneRestoreRobot,parameters)
-# 		db.robot.update({ "_id" : parameters[4] }, { "$set" : { "itemID" : None, "robotTaken" : False } })
-
-# def retrieveRobotDoneRestoreRobot(parameters, result, error):
-# 	print('result %s error %s' % (repr(result), repr(result)))
-# 	print('Robot cleansed, time to remove item and cleanse slot')
-# 	callback_function = partial(retrieveRobotDoneRestoreSlot,parameters)
-# 	db.slot.update({ "_id" : parameters[1] }, { "$set" : { "itemID" : None, "slotTaken" : False } }, callback=callback_function)
-
-# def retrieveRobotDoneRestoreSlot(parameters, result, error):
-# 	print('result %s error %s' % (repr(result), repr(result)))
-# 	print('Slot cleansed, time to remove item')
-# 	callback_function = partial(retrieveRobotDoneRemovedItem, parameters)
-# 	# No method for deleting one, but if we use ID we're safe
-# 	db.item.delete_many({ "_id" : parameters[0] },callback=callback_function)
-
-# def retrieveRobotDoneRemovedItem(parameters, result, error):
-# 	print('result %s error %s' % (repr(result), repr(result)))
-# 	print('Item removed. All is good in the world')
-# 	ioloop.IOLoop.current().stop()
 
 
 # # # # # # # # # # # # # # # # # #
