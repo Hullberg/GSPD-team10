@@ -15,7 +15,7 @@ import time
 from bson.objectid import ObjectId
 from functools import partial
 import robot_conn
-import ardnet
+#import ardnet
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
@@ -83,7 +83,7 @@ class SimpleEcho(WebSocket):
 def storeGetSlotDone(parameters, result, error):
 	if (repr(result) == "None"):
 		print('Either all slots are filled, or no slots fulfill the requirements')
-		SimpleEcho.client.sendMessage(u'Either all slots are filled, or no slots fulfill the requirements')
+	#	SimpleEcho.client.sendMessage(u'Either all slots are filled, or no slots fulfill the requirements')
 		# Send back to client it didn't work.
 	else:
 		print('Slot info is now ready')
@@ -146,7 +146,7 @@ def storeUpdateRobotDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(error)))
 	# [slotID, x, y, robotID, robX, robY]
 	# Find item with params[0], set it's robotID to params[3]
-
+        print(parameters[0])
 	callback_function = partial(storeUpdateItemDone, parameters)
 	db.item.update({ '_id' : parameters[0] }, {"$set" : {"robotID" : parameters[3]}}, callback=callback_function)
 
@@ -161,19 +161,19 @@ def storeUpdateItemDone(parameters, result, error):
 	print('Coordinates sent to the robot')
 	# # #
 	# MARK: Everything above works in the callback-chain
-	# # # 
-	resp2 = yield getTaskDone()
-	if resp2 == 1:
-		# Robot done
-		# Robot available parameters[3]
-		callback_function = partial(storeRobotIsDone, parameters)
-		db.robot.update({ '_id' : parameters[3] }, { "$set" : { "itemID" : None, "robotTaken" : False } }, callback = callback_function)
+	# # #
+# 	resp2 = yield getTaskDone()
+# 	if resp2 == 1:
+# 		# Robot done
+# 		# Robot available parameters[3]
+# 		callback_function = partial(storeRobotIsDone, parameters)
+# 		db.robot.update({ '_id' : parameters[3] }, { "$set" : { "itemID" : None, "robotTaken" : False } }, callback = callback_function)
 
-	
-def storeRobotIsDone(parameters, result, error):
-	print('Robot is now set to free!')
-	print('result %s error %s' % (repr(result), repr(error)))
-	ioloop.IOLoop.current().stop()
+
+# def storeRobotIsDone(parameters, result, error):
+# 	print('Robot is now set to free!')
+# 	print('result %s error %s' % (repr(result), repr(error)))
+# 	ioloop.IOLoop.current().stop()
 
 
 # # # # # # # # # # # # # # # # # #
@@ -238,33 +238,33 @@ def retrieveUpdateItemDone(parameters, result, error):
 	response = sendCoords(coords)
 	# As we do not expect any return value, we just send it and hope it works. Usually does.
 	print('Coordinates sent to robot')
-	
+
 	# # #
 	# MARK: Everything above works in the callback-chain
 	# # #
-	resp2 = yield getTaskDone()
-	if resp2 == 1:
-		# Robot done.
-		callback_function = partial(retrieveRobotDoneRestoreRobot,parameters)
-		db.robot.update({ "_id" : parameters[4] }, { "$set" : { "itemID" : None, "robotTaken" : False } })
-	
-def retrieveRobotDoneRestoreRobot(parameters, result, error):
-	print('result %s error %s' % (repr(result), repr(result)))
-	print('Robot cleansed, time to remove item and cleanse slot')
-	callback_function = partial(retrieveRobotDoneRestoreSlot,parameters)
-	db.slot.update({ "_id" : parameters[1] }, { "$set" : { "itemID" : None, "slotTaken" : False } }, callback=callback_function)
+# 	resp2 = yield getTaskDone()
+# 	if resp2 == 1:
+# 		# Robot done.
+# 		callback_function = partial(retrieveRobotDoneRestoreRobot,parameters)
+# 		db.robot.update({ "_id" : parameters[4] }, { "$set" : { "itemID" : None, "robotTaken" : False } })
 
-def retrieveRobotDoneRestoreSlot(parameters, result, error):
-	print('result %s error %s' % (repr(result), repr(result)))
-	print('Slot cleansed, time to remove item')
-	callback_function = partial(retrieveRobotDoneRemovedItem, parameters)
-	# No method for deleting one, but if we use ID we're safe
-	db.item.delete_many({ "_id" : parameters[0] },callback=callback_function)
+# def retrieveRobotDoneRestoreRobot(parameters, result, error):
+# 	print('result %s error %s' % (repr(result), repr(result)))
+# 	print('Robot cleansed, time to remove item and cleanse slot')
+# 	callback_function = partial(retrieveRobotDoneRestoreSlot,parameters)
+# 	db.slot.update({ "_id" : parameters[1] }, { "$set" : { "itemID" : None, "slotTaken" : False } }, callback=callback_function)
 
-def retrieveRobotDoneRemovedItem(parameters, result, error):
-	print('result %s error %s' % (repr(result), repr(result)))
-	print('Item removed. All is good in the world')
-	ioloop.IOLoop.current().stop()
+# def retrieveRobotDoneRestoreSlot(parameters, result, error):
+# 	print('result %s error %s' % (repr(result), repr(result)))
+# 	print('Slot cleansed, time to remove item')
+# 	callback_function = partial(retrieveRobotDoneRemovedItem, parameters)
+# 	# No method for deleting one, but if we use ID we're safe
+# 	db.item.delete_many({ "_id" : parameters[0] },callback=callback_function)
+
+# def retrieveRobotDoneRemovedItem(parameters, result, error):
+# 	print('result %s error %s' % (repr(result), repr(result)))
+# 	print('Item removed. All is good in the world')
+# 	ioloop.IOLoop.current().stop()
 
 
 # # # # # # # # # # # # # # # # # #
