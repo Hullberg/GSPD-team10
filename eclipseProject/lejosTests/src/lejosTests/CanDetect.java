@@ -6,6 +6,7 @@ import lejos.robotics.subsumption.Behavior;
 public class CanDetect {
 
 	
+	
 	public static void main(String[] args){
 		Traveler traveler = new Traveler();
 		Connection conn = new Connection();

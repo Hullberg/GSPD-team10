@@ -69,9 +69,7 @@ public class Movement implements Behavior {
 					incrementPosition();		
 
 					if(shouldRobotTurn()){
-						//Delay.msDelay(500);
-						traveler.getChassis().setVelocity(0d, -90d);
-						//Delay.msDelay(1000);
+						traveler.turnLeft();
 						movingInX = !movingInX;
 					}
 				}

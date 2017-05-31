@@ -11,6 +11,7 @@ import lejos.robotics.chassis.Wheel;
 import lejos.robotics.chassis.WheeledChassis;
 import lejos.robotics.navigation.MovePilot;
 import lejos.robotics.navigation.RotateMoveController;
+import lejos.utility.Delay;
 
 /**
  * Robot travels to obstacle and back again -- original comment
@@ -45,87 +46,91 @@ public class Traveler {
 	}
 
 
-	public void moveForward(int slots){
-
-		getPilot().travel(50 * slots);
-
-		getPilot().stop();
-
-	}
-
-	public void turnRight(){
-
-		getPilot().rotate(90);
-
-	}
-
-
-	public void turnLeft(){
-
-		getPilot().rotate(-90);
-
-	}
-	public void moveToCoordinates(int x, int y){
-
-		moveForward(x);	  
-		turnLeft();	
-		moveForward(y);	  
-	}
-
-	public void returnFromCoordinates(int x, int y){
-
-		turnLeft();
-		moveForward(x);
-		turnLeft();
-		moveForward(y);
-		turnLeft();
-
-	}
-/*  Probably not needed
-	public void takeThreeCommands(Connection conn){
-		
-		for(int i = 0; i<3; i++){
-
-			int command = conn.readInt();
-
-			switch (command) {
-			case 1: moveForward(5);
-			break;
-			case 2: turnLeft();
-			break;
-			case 3: moveForward(-5);
-			break;
-			case 4: turnRight();
-			break;
-			default: LCD.drawInt(command, 4,6);
-			break;
-			}
-		}
-
-		
-	} */
 	
 	public void followLine(){
 			
 		// turn left if white 
 		if(sensors.getColID() == 6){
 			LCD.drawInt(2, 4, 4);
-			chassis.setVelocity(50d, -5d);
+			chassis.setVelocity(30d, -10d);
 		}
-		// turn  if black
+		// turn right if black
 		else if (sensors.getColID() == 7){
 			LCD.drawInt(1, 4, 4);
-			chassis.setVelocity(50d, 5d);
+			chassis.setVelocity(30d, 10d);
 		}
 		
 	}
+	public void turnLeft(){
+		
+		
+		chassis.setVelocity(0d, -30d);
+		
+		//chassis.rotate(-90);
+		//turn until black
+		while(sensors.getColID() != 7){
+			
+		}
+		
+		//keep turning until we see white after black
+		while(sensors.getColID() != 6){
+			
+		}
+		
+		//change turning direction
+		chassis.setVelocity(30d, 10d);
+		Delay.msDelay(400);
+		// turn back until white
+		while(sensors.getColID() == 7){
+			
+		}
+		
+		
 
+	}
+	
+	public void turnRight(){
+		
+		chassis.setVelocity(30d, -10d);
+		Delay.msDelay(1000);
 
+		chassis.setVelocity(0d, 0d);
+		
+		chassis.setVelocity(0d, 30d);
+		Delay.msDelay(1000);
+		//turn until red
+				while(sensors.getColID() != 0){
+					
+				}
+				
+				//keep turning until we see white after black
+			//	while(sensors.getColID() != 6){
+					
+				//}
+				
+				//change turning direction
+				chassis.setVelocity(30d, -10d);
+		
+		
+	}
 
 	public RotateMoveController getPilot() {
 		return pilot;
 	}	
-	
-  
+	/*
+	public static void main(String[] args){
+		
+		Traveler traveler = new Traveler();
+		traveler.chassis.setVelocity(50d,0d);
+		
+		while
+		
+		if(traveler.sensors.getColID() ==0){
+			
+		}
+		
+		
+	}
+  */
 	 
 }
