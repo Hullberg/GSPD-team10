@@ -26,7 +26,7 @@ class ardunit(object):
             time.sleep(1)
             self.last_Temp = self.ser.readline()
             return self.last_Temp
-        
+
         except self.ser.SerialTimeoutException:
             print('Data could not be read')
 
@@ -44,12 +44,12 @@ class ardunit(object):
     def get_uv(self):
 
          try:
-            self.ser.write('u')
-            time.sleep(1)
-            self.last_uv = self.ser.readline()
-            return self.last_uv
+             self.ser.write('u')
+             time.sleep(1)
+             self.last_uv = self.ser.readline()
+             return self.last_uv
         
-        except self.ser.SerialTimeoutException:
+         except self.ser.SerialTimeoutException:
             print('Data could not be read')
 
     def get_rh(self):
@@ -61,7 +61,7 @@ class ardunit(object):
             self.last_rh = self.ser.readline()
             return self.last_rh
         
-        except self.ser.SerialTimeoutException:
+         except self.ser.SerialTimeoutException:
             print('Data could not be read')
 
         
