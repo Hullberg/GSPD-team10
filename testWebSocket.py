@@ -15,12 +15,13 @@ import time
 from bson.objectid import ObjectId
 from functools import partial
 import robot_conn
+import ardnet
 
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
 
-#global itemsInDB
-#global amt
+global itemsInDB
+global amt
 
 # # # # # # # # # # # # # # # # # #
 # MARK - Websocket interaction with client
@@ -58,13 +59,11 @@ class SimpleEcho(WebSocket):
 			client.sendMessage(u'Package ' + packageId + ' is queued for delivery to the gate. Please be informed');
 			# The ID is simply a string in front-end, convert to ObjectId
 
-
 			pckID = ObjectId(packageId)
 			print pckID
 			callback_function = partial(retrieveGetItemDone, pckID)
-			retrieveQuery = { "_id" : pckID }
 
-			db.item.find_one(retrieveQuery, callback=callback_function)
+			db.item.find_one({ "_id" : pckID }, callback=callback_function)
 			ioloop.IOLoop.current().start()
 
 
@@ -155,7 +154,6 @@ def storeUpdateRobotDone(parameters, result, error):
 def storeUpdateItemDone(parameters, result, error):
 	print('Item updated')
 	print('result %s error %s' % (repr(result), repr(error)))
-	print('Everything went nice')
 	# Parameters = [itemID, x,y, robotID, robX, robY]
 	# [robX, robY, z = 0, x, y, z = 0]
 	coords = [int(parameters[4]), int(parameters[5]), 0, int(parameters[1]), int(parameters[2]), 0]
@@ -237,18 +235,28 @@ bd_addr = "00:16:53:52:1E:34" #EV3 robot bluetooth address
 
 rob_conn = robot_conn.RobotConnection(bd_addr) # Uses robot_conn.py to initiate connection to the EV3 robot
 
-def funcone(coords, callback=None):
+def asyncSendCoords(coords, callback=None):
 	return callback(rob_conn.send_coords(coords))
 
 @gen.engine
 def sendCoords(coords):
-        gen.Task(funcone, coords)
+	gen.Task(asyncSendCoords, coords)
 
 #def RobotTaskDone(): # TODO Receive message from robot it's done, update db accordingly
 #	print("Job's done")
 
 # USE Robot - Server API to send tasks.
 # TODO: A robot finishes task, (delete) item, update necessary fields
+def waitForRobot():
+	coords = rob_conn.recv_coords()
+	# Update the robot to free, 
+
+def asyncRobotDone(bleh, callback=None):
+	return callback(waitForRobot())
+
+@gen.engine
+def robotTaskDone():
+	gen.Task(asyncRobotDone, "")
 
 
 # # # # # # # # # # # # # # # # # #
@@ -256,45 +264,41 @@ def sendCoords(coords):
 # # # # # # # # # # # # # # # # # #
 
 # Retrieve light / temperature and update the slots in the database.
+# TODO
 
-#global retrievedSlots
-#global amtSlots
+def asyncUpdateSlotDB(callback=None):
+	# Create ardunit
+	# ard = ardunit("?", 57600, "at")
+	# Should be arduino measurements instead of temps.
+	# temptemp = ard.get_temp()
+	# templight = ard.getvl()
+	temptemp = 20
+	templight = 800
+	listOfSlots = yield db.slot.find({}).to_list(None)
+	for x in range(0,len(listOfSlots))
+		db.slot.update({ "_id" : listOfSlots[x]['_id'] }, { "$set" : { "temperature" : temptemp, "lightSensitivity" : templight }})
+	return callback("done")
 
-# def updateDB(temp, light):
-# 	counter = 0
-# 	params = [temp,light,counter]
-# 	callback_function = partial(updateSlots, params)
-# 	db.slot.find({},callback=callback_function).to_list(None)
-# 	ioloop.IOLoop.current().start()
-
-# def updateSlots(parameters, result, error):
-# 	# Result is the list of all slots.
-# 	if parameters[2] == 0:
-# 		# Counter = 0 => first time
-# 		retrievedSlots = repr(result)
-# 		amtSlots = len(retrievedSlots)
-
-# 	# Look at the element counter, take the ID of that slot, and update it's temperature and light to what was given from arduino
-# 	if parameters[2] < amtSlots:
-# 		parameters[2] = parameters[2] + 1
-# 		callback_function = partial(updateSlots, parameters)
-# 		db.slot.update({ '_id' : retrievedSlots[parameters[2]-1]['_id']]}, { "$set" : { "lightSensitivity" : parameters[1], "temperature" : parameters[0]}}, callback=callback_function)
-
-
+@gen.engine
+def updateSlotDB():
+	gen.Task(asyncUpdateSlotDB)
 
 
 # # # # # # # # # # # # # # # # # #
 # MARK - Misc.
 # # # # # # # # # # # # # # # # # #
 
-# def getAllItems():
-# 	# Get all items in db and send to client
-# 	temp = yield db.slot.find({}).to_list(None)
-# 	amt = len(temp)
-# 	itemsInDB = []
-# 	for x in range(0,amt):
-# 		itemsInDB.append([str(temp[x]['_id']), str(temp[x]['itemName']), str(temp[x]['xCoord']), str(temp[x]['yCoord'])])
-# 	# Use these when connecting to client.
+def asyncGetItems(callback=None):
+	temp = yield db.slot.find({}).to_list(None)
+	amt = len(temp)
+	itemsInDB = []
+	for x in range(0,amt):
+		itemsInDB.append([str(temp[x]['_id']), str(temp[x]['itemName']), str(temp[x]['xCoord']), str(temp[x]['yCoord'])])
+	return callback(itemsInDB)
+
+@gen.engine
+def getAllItems():
+		gen.Task(asyncGetItems)
 
 # # # # # # # # # # # # # # # # # #
 # MARK - Main
