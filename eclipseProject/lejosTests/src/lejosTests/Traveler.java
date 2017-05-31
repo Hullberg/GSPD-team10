@@ -67,6 +67,7 @@ public class Traveler {
 		chassis.setVelocity(0d, -30d);
 		
 		//chassis.rotate(-90);
+		
 		//turn until black
 		while(sensors.getColID() != 7){
 			
@@ -90,28 +91,30 @@ public class Traveler {
 	}
 	
 	public void turnRight(){
-		
-		chassis.setVelocity(30d, -10d);
-		Delay.msDelay(1000);
+
+		//		chassis.setVelocity(30d, -10d);
+		//		Delay.msDelay(1000);
 
 		chassis.setVelocity(0d, 0d);
-		
+
+		Delay.msDelay(2000);
+
 		chassis.setVelocity(0d, 30d);
 		Delay.msDelay(1000);
 		//turn until red
-				while(sensors.getColID() != 0){
-					
-				}
-				
-				//keep turning until we see white after black
-			//	while(sensors.getColID() != 6){
-					
-				//}
-				
-				//change turning direction
-				chassis.setVelocity(30d, -10d);
-		
-		
+		while(sensors.getColID() != 0){
+
+		}
+
+		//keep turning until we see white after red
+		while(sensors.getColID() != 6){
+
+		}
+
+		//change turning direction
+		chassis.setVelocity(30d, 10d);
+
+
 	}
 
 	public RotateMoveController getPilot() {
