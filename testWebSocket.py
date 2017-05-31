@@ -19,8 +19,8 @@ import robot_conn
 mc_client = motor_tornado.MotorClient("mongodb://root:root@ds135798.mlab.com:35798/gspd",connectTimeoutMS=30000,socketTimeoutMS=None,socketKeepAlive=True)
 db = mc_client.gspd
 
-global itemsInDB
-global amt
+#global itemsInDB
+#global amt
 
 # # # # # # # # # # # # # # # # # #
 # MARK - Websocket interaction with client
@@ -45,7 +45,7 @@ class SimpleEcho(WebSocket):
 			client.sendMessage(u'Searching for a slot for ' + packageName)
 			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
-			simpleQuery = { "lightSensitivity" : {"$lte" : lightMax}, "lightSensitivity" : {"$gte" : lightMin}, "temperature" : {"$lte" : tempMax}, "temperature" : {"$gte" : tempMin}}
+			simpleQuery = { "slotTaken" : False, "lightSensitivity" : {"$lte" : lightMax}, "lightSensitivity" : {"$gte" : lightMin}, "temperature" : {"$lte" : tempMax}, "temperature" : {"$gte" : tempMin}}
 			parameters = [packageName, tempMin, tempMax, lightMin, lightMax]
 			callback_function = partial(storeGetSlotDone,parameters)
 			db.slot.find_one(simpleQuery, callback=callback_function)
@@ -69,9 +69,9 @@ class SimpleEcho(WebSocket):
 
 
 	def handleConnected(client):
-		# print(client.address, 'connected')
+		print(client.address, 'connected')
 		# print(itemsInDB)
-		client.sendMessage(itemsInDB) # Send all items in the database to the client. To know what to retrieve
+		#client.sendMessage(itemsInDB) # Send all items in the database to the client. To know what to retrieve
 
 
 	def handleClose(client):
@@ -92,7 +92,6 @@ def storeGetSlotDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(error)))
 	temp = repr(result['_id']).split("'")[1]
 	slotID = ObjectId(temp)
-	print slotID
 	xCoord = int(repr(result['xCoord']))
 	yCoord = int(repr(result['yCoord']))
 	packageName = parameters[0]
@@ -148,7 +147,6 @@ def storeUpdateRobotDone(parameters, result, error):
 	print('Robot updated')
 	print('result %s error %s' % (repr(result), repr(error)))
 	# [slotID, x, y, robotID, robX, robY]
-	#Update the item, then we're done.
 	# Find item with params[0], set it's robotID to params[3]
 
 	callback_function = partial(storeUpdateItemDone, parameters)
@@ -159,15 +157,11 @@ def storeUpdateItemDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(error)))
 	print('Everything went nice')
 	# Parameters = [itemID, x,y, robotID, robX, robY]
-	# Send this task to the robot. TODO
-	print parameters
 	# [robX, robY, z = 0, x, y, z = 0]
 	coords = [int(parameters[4]), int(parameters[5]), 0, int(parameters[1]), int(parameters[2]), 0]
 
 	response = sendCoords(coords)
-	print response
-	print('Will now send coords to robot')
-	print coords
+	print('Coordinates sent to the robot')
 	ioloop.IOLoop.current().stop()
 
 
@@ -226,15 +220,12 @@ def retrieveUpdateSlotDone(parameters, result, error):
 def retrieveUpdateItemDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(result)))
 	# Item is updated, send task to robot.
-	print(parameters)
 	# From and to [robX, robY, z=0, itemX, itemY, z=0]
 	coords = [parameters[5], parameters[6], 0, parameters[2], parameters[3], 0]
 
 	response = sendCoords(coords)
-	print response
-	print('Will now send coords to robot')
+	print('Coordinates sent to robot')
 	# As we do not expect any return value, we just send it and hope it works. Usually does.
-	print coords
 	ioloop.IOLoop.current().stop()
 
 
@@ -253,8 +244,8 @@ def funcone(coords, callback=None):
 def sendCoords(coords):
         gen.Task(funcone, coords)
 
-def RobotTaskDone():
-	print("Job's done")
+#def RobotTaskDone(): # TODO Receive message from robot it's done, update db accordingly
+#	print("Job's done")
 
 # USE Robot - Server API to send tasks.
 # TODO: A robot finishes task, (delete) item, update necessary fields
@@ -266,8 +257,8 @@ def RobotTaskDone():
 
 # Retrieve light / temperature and update the slots in the database.
 
-global retrievedSlots
-global amtSlots
+#global retrievedSlots
+#global amtSlots
 
 # def updateDB(temp, light):
 # 	counter = 0
@@ -310,7 +301,7 @@ global amtSlots
 # # # # # # # # # # # # # # # # # #
 if __name__ == '__main__':
 
-	getAllItems()
+	#getAllItems()
 
 	server = SimpleWebSocketServer('', 9000, SimpleEcho)
 	server.serveforever()
