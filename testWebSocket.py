@@ -194,9 +194,10 @@ def retrieveGetItemDone(parameters, result, error):
 	yCoord = repr(result['yCoord'])
 
 	parameters = [itemID, slotID, xCoord, yCoord] # Keep these throughout the callback, to avoid loosing track
+        print(parameters)
 	callback_function = partial(retrieveFindRobotDone, parameters)
 
-	db.robot.find({ "state" : True, "robotTaken" : False}, callback = callback_function)
+	db.robot.find_one({ "state" : True, "robotTaken" : False}, callback = callback_function)
 
 
 def retrieveFindRobotDone(parameters, result, error):
@@ -233,7 +234,7 @@ def retrieveUpdateItemDone(parameters, result, error):
 	# Item is updated, send task to robot.
 	# parameters = [itemID, slotID, xCoord, yCoord, robotID, robX, robY]
 	# When doing a retrieve robot will always go to (0,0,0)
-	coords = [parameters[5],parameters[6],0,0,0,0]
+	coords = [int(parameters[2]),int(parameters[3]),0,0,0,0]
 
 	response = sendCoords(coords)
 	# As we do not expect any return value, we just send it and hope it works. Usually does.
