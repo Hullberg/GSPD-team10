@@ -108,9 +108,19 @@ public class Movement implements Behavior {
 							returning = true;
 						}
 						
-//						if(atFrom()){
-//							
-//						}
+						if(atFrom()){
+							traveler.turnLeft();
+							
+							LCD.drawString("atFrom", 0, 4);
+							
+							//Delay.msDelay(3000)
+							traveler.turnRight();
+						//	movingInX = !movingInX;
+							targetX = currentX;
+							targetY = yMax;
+							
+							returning = true;
+						}
 						if(atBase()){
 							traveler.turnLeft();
 							taskActive = false;
@@ -212,8 +222,8 @@ public class Movement implements Behavior {
 		toY = taskCoordinates[4];
 		
 		if(fromX == 0 && fromY == 0){  // if from is base, set target to to-coordinates 
-		setTargetX(toX);
-		setTargetY(toY);
+			setTargetX(toX);
+			setTargetY(toY);
 		}
 		else { // else target is the from-coordinates
 			setTargetX(taskCoordinates[0]);
