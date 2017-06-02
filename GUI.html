@@ -165,8 +165,15 @@
 		var itemName = $('#itemName').val();
 		var tempReq = $('#tempReq').val().split(',');
 		var lightReq = $('#lightReq').val().split(',');
-
 		queueWork(itemName, tempReq, lightReq);
+
+		if(_freeRobots > 0 )
+		debugSend('store|'+
+			item.attr("itemName") + "|" +
+			item.attr("tempMin ") + "|" + 
+			item.attr("tempMax ") + "|" + 
+			item.attr("lightMin") + "|" + 
+			item.attr("lightMax") + "|");
 	})
 
 	$('#retrieveBtn').click(()=>{		
