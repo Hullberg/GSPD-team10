@@ -5,6 +5,7 @@
 
 
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script> -->
+<script src="http://cdnjs.cloudflare.com/ajax/libs/Sortable/1.5.1/Sortable.min.js"></script>
 <script src="GUI_lib/jquery.min.js"></script>
 
 <script src="GUI_lib/bootstrap.min.js"></script>
@@ -83,7 +84,7 @@
 	<div class="col-md-4">
 	<div class="col-md-12">
 		<h3>In progress</h3>
-		<ul>
+		<ul id="inProgressWorks">
 			<li><a href="#">1. Store Golfball at (175,75)</a></li>
 			<li><a href="#">2. Retrieve 'Coffe cup' from (275,75)</a></li>
 			<li><a href="#">3. Retrieve 'Headphones' from (175,125)</a></li>
@@ -91,11 +92,9 @@
 		</ul>
 	</div>
 	<div class="col-md-12">
-		<h3>Work order</h3>
-		<ul>
-			<li><a href="#">1. Retrieve 'Coffe cup' from (175,175)</a></li>
-			<li><a href="#">2. Retrieve 'Sandals' from (275,125)</a></li>
-			<li><a href="#">3. Retrieve 'Coffe cup' from (275,175)</a></li>
+		<h3>Queued works</h3>
+		<ul id="queuedWorks">
+			
 		</ul>
 	</div>
 	</div>
@@ -113,45 +112,100 @@
 <script>
 	$("#tempReq").slider({});
 	$("#lightReq").slider({});
+	Sortable.create(document.getElementById('queuedWorks'));
+
 
 	const serverAddress = 'ws://localhost:9000';
-	const socket = new WebSocket(serverAddress);
+	const server = new WebSocket(serverAddress);
 
-	socket.addEventListener('open', (event)=>{
+	server.addEventListener('open', (event)=>{
 		debug("Connection to " + serverAddress + " opened.");
 		var message = 'Hello server! \n Give me infos about your robots!';
 		debugSend(message);
 		
 	});
 
-	socket.addEventListener('message', (event)=>{
-		debug('server: ' + JSON.stringify(event.data));
-		console.log(event);
+	server.addEventListener('message', (event)=>{
+		var serverMessage = JSON.stringify(event.data);
+		debug('server: ' + serverMessage);
+
+		var paramaters = serverMessage.split('|');
+		var command = paramaters[0];
+
+		if(command == 'freeRobot'){
+			var queue = $("#queuedWorks").children();
+			var item = queue[0];
+			if(item == null){
+				_freeRobots++;
+				return;
+			}
+
+			item = $(item);
+			debugSend('store|'+
+			item.attr("itemName") + "|" +
+			item.attr("tempMin ") + "|" + 
+			item.attr("tempMax ") + "|" + 
+			item.attr("lightMin") + "|" + 
+			item.attr("lightMax") + "|");
+		}
+
+		if(command == "workAssigned"){
+			var item = $("#queuedWorks").children()[0];
+			$(item).attr("workId", paramaters[1]);
+			$($(item).children()[1]).remove();
+			$("#inProgressWorks").append(item);
+			_freeRobots--;
+		}
+
+
 	});
 
-	$('#storeBtn').click(()=>{
-		var tempReq = $('#tempReq').val().split(',');
-		var tempMin = tempReq[0];
-		var tempMax = tempReq[1];
-		var lightReq = $('#lightReq').val().split(',');
-		var lightMin = lightReq[0];
-		var lightMax = lightReq[1];
 
-		debugSend('store|'+ $('#itemName').val() + "|" +
-			tempMin + "|" + 
-			tempMax + "|" + 
-			lightMin + "|" + 
-			lightMax + "|");
+	$('#storeBtn').click(()=>{
+		var itemName = $('#itemName').val();
+		var tempReq = $('#tempReq').val().split(',');
+		var lightReq = $('#lightReq').val().split(',');
+
+		queueWork(itemName, tempReq, lightReq);
 	})
 
 	$('#retrieveBtn').click(()=>{		
 		debugSend('retrieve|'+ $('#itemId').val());
 	})
 
+	var _queueId = 0;
+	var _freeRobots = 0;
+	function queueWork(itemName, tempReq, lightReq){
+		var queueId = _queueId;
+		$('#queuedWorks').append(
+			$('<li></li>').append(
+				$('<a></a>')
+					.text(itemName)
+					.attr("style", "display: inline-block"),
+				$('<a></a>')
+					.text('✖')
+					.attr("style", "display: inline-block; float:right")
+					.click(()=>{
+						removeFromQueue(queueId)
+					})
+			)
+			.attr("id", "queuedWork-" + queueId)
+			.attr("tempMin", tempReq[0])
+			.attr("tempMax", tempReq[1])
+			.attr("lightMin", lightReq[0])
+			.attr("lightMax", lightReq[1])
+		)
+		_queueId++;
+	}
+
+	function removeFromQueue(queueId){
+		// console.log("removeFromQueue: "+ queueId);
+		$('#queuedWork-' + queueId).remove();
+	}
 
 	function debugSend(string){
 		debug("Me: " + string);
-		socket.send(string);
+		server.send(string);
 	}
 	function debug(string){
 		$('#debugBox').append(string + "<br>");
