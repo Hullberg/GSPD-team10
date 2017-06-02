@@ -1,12 +1,3 @@
-# This is a simple WebSocket echo server
-# I took from this repo from https://github.com/dpallot/simple-websocket-server
-
-# I was using built-in python 2.7, Ubuntu 14.04
-# Just run this installation line:
-# sudo pip install git+https://github.com/dpallot/simple-websocket-server.git
-
-# And then run the GUI.html to see the test result :)
-
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 from motor import motor_tornado
 from tornado import ioloop, gen
@@ -44,10 +35,9 @@ class SimpleEcho(WebSocket):
 
 
 			client.sendMessage(u'Searching for a slot for ' + packageName)
-			client.sendMessage(packageName + u' is queued for storing. Please be informed');
 
 			simpleQuery = { "slotTaken" : False, "lightSensitivity" : {"$lte" : lightMax}, "lightSensitivity" : {"$gte" : lightMin}, "temperature" : {"$lte" : tempMax}, "temperature" : {"$gte" : tempMin}}
-			parameters = [packageName, tempMin, tempMax, lightMin, lightMax]
+			parameters = [packageName, tempMin, tempMax, lightMin, lightMax, client]
 			callback_function = partial(storeGetSlotDone,parameters)
 			db.slot.find_one(simpleQuery, callback=callback_function)
 
@@ -66,10 +56,12 @@ class SimpleEcho(WebSocket):
 			ioloop.IOLoop.current().start()
 
 
+
 	def handleConnected(client):
 		print(client.address, 'connected')
-		# print(itemsInDB)
-		#client.sendMessage(itemsInDB) # Send all items in the database to the client. To know what to retrieve
+		client.sendMessage(u'Hello client, my robots is ready to serve you');
+		print(itemsInDB)
+		# client.sendMessage(itemsInDB) # Send all items in the database to the client. To know what to retrieve
 
 
 	def handleClose(client):
@@ -81,13 +73,6 @@ class SimpleEcho(WebSocket):
 # # # # # # # # # # # # # # # # # #
 
 def storeGetSlotDone(parameters, result, error):
-	if (repr(result) == "None"):
-		print('Either all slots are filled, or no slots fulfill the requirements')
-	#	SimpleEcho.client.sendMessage(u'Either all slots are filled, or no slots fulfill the requirements')
-		# Send back to client it didn't work.
-	else:
-		print('Slot info is now ready')
-	print('result %s error %s' % (repr(result), repr(error)))
 	temp = repr(result['_id']).split("'")[1]
 	slotID = ObjectId(temp)
 	xCoord = int(repr(result['xCoord']))
@@ -97,11 +82,19 @@ def storeGetSlotDone(parameters, result, error):
 	tempMax = parameters[2]
 	lightMin = parameters[3]
 	lightMax = parameters[4]
+	client = parameters[5]
 
-	params = [slotID, xCoord, yCoord]
+	if (repr(result) == "None"):
+		client.sendMessage(u'Either all slots are filled, or no slots fulfill the requirements')
+	else:
+		client.sendMessage(u'Your ' + packageName + ' is queued for storing at slot id: ' + slotID);
 
-	postItemQuery = { "itemName" : packageName, "xCoord" : xCoord, "yCoord" : yCoord, "tempMin" : tempMin, "tempMax" : tempMax, "lightMin" : lightMin, "lightMax" : lightMax, "itemTaken" : True, "robotID" : None, "slotID" : slotID}
+	print('result %s error %s' % (repr(result), repr(error)))
+	
+
+	params = [slotID, xCoord, yCoord, client]
 	callback_function = partial(storePostItemDone, params)
+	postItemQuery = { "itemName" : packageName, "xCoord" : xCoord, "yCoord" : yCoord, "tempMin" : tempMin, "tempMax" : tempMax, "lightMin" : lightMin, "lightMax" : lightMax, "itemTaken" : True, "robotID" : None, "slotID" : slotID}
 	db.item.insert_one(postItemQuery, callback=callback_function) # Continues to postItemDone
 
 
@@ -115,6 +108,10 @@ def storePostItemDone(parameters, result, error):
 
 	callback_function = partial(storeUpdateSlotDone,parameters)
 	db.slot.update({ '_id' : slotID }, {"$set" : {"itemID" : itemID, "slotTaken" : True }}, callback=callback_function) # Continues to updateSlotDone
+
+	
+
+	
 
 
 def storeUpdateSlotDone(parameters, result, error):
@@ -155,7 +152,6 @@ def storeUpdateItemDone(parameters, result, error):
 	print('result %s error %s' % (repr(result), repr(error)))
 	# Parameters = [itemID, x,y, robotID, robX, robY]
 	# When doing a store, the robot will always be at (0,0,0)
-	
 
 	# We have tested and know the robot will get the task. Update database before
 	# However, tasks can then be overridden, caution.
