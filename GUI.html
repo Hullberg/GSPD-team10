@@ -117,24 +117,24 @@
 	//
 	robotMove
 	var positionsOnMap = [
-		[39, 304],
-		[205, 301],
-		[205, 99],
-		[355, 301],
-		[355, 99],
-		[515, 301],
-		[515, 99],
-		[667, 301],
-		[667, 99],
-		[817, 301],
-		[817, 99],
-		[968, 301],
-		[968, 99],
-		[1131, 301]
+		[163, 121],
+		[163, 305],
+		[294, 121],
+		[294, 305],
+		[423, 121],
+		[423, 305],
+		[552, 121],
+		[552, 305],
+		[680, 121],
+		[680, 305],
+		[813, 121],
+		[813, 305],
+		[944, 121],
+		[944, 305],
 	];
 	positionsOnMap.forEach((item) =>{
-		item[0] /= 1192;
-		item[1] /= 446;
+		item[0] /= 1124;
+		item[1] /= 416;
 	});
 	function robotMove(positionId){
 		var map = document.getElementById("wareHouseMap");
@@ -157,7 +157,7 @@
 		robot.style.left = calcLeft;
 	}
 	robotMove(0);
-	
+
 	$("#tempReq").slider({});
 	$("#lightReq").slider({});
 	Sortable.create(document.getElementById('queuedWorks'));
