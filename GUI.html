@@ -11,9 +11,9 @@
 <script src="GUI_lib/bootstrap.min.js"></script>
 <script src="GUI_lib/bootstrap-slider.min.js"></script>
 <body>
-<div id="debugBox" style="position: fixed; right: 0; bottom: 0; width: 500px; height: 400px; background-color: rgba(40,40,40,0.6); color: lightgreen; font-size: 16px;">
+<!-- <div id="debugBox" style="position: fixed; right: 0; bottom: 0; width: 500px; height: 400px; background-color: rgba(40,40,40,0.6); color: lightgreen; font-size: 16px;">
 	DEBUG BOX<br>
-</div>
+</div> -->
 <div id="storeModal" class="modal fade" role="dialog">
 	<!-- Modal content-->
 	<div class="modal-dialog">
@@ -82,26 +82,30 @@
 </div>
 <div class="row">
 	<div class="col-md-4">
-	<div class="col-md-12">
-		<h3>In progress</h3>
-		<ul id="inProgressWorks">
-			<li><a href="#">1. Store Golfball at (175,75)</a></li>
-			<li><a href="#">2. Retrieve 'Coffe cup' from (275,75)</a></li>
-			<li><a href="#">3. Retrieve 'Headphones' from (175,125)</a></li>
-			<li><a href="#">4. Retrieve 'Notepad' from (375,75)</a></li>
-		</ul>
-	</div>
-	<div class="col-md-12">
-		<h3>Queued works</h3>
-		<ul id="queuedWorks">
-			
-		</ul>
-	</div>
+		<div class="col-md-12" style="border: 2px dotted black;">
+			<h3>In progress</h3>
+			<ul id="inProgressWorks">
+				<li><a href="#">1. Store Golfball at (175,75)</a></li>
+				<li><a href="#">2. Retrieve 'Coffe cup' from (275,75)</a></li>
+				<li><a href="#">3. Retrieve 'Headphones' from (175,125)</a></li>
+				<li><a href="#">4. Retrieve 'Notepad' from (375,75)</a></li>
+			</ul>
+		</div>
+		<div class="col-md-12" style="border: 2px dotted black; border-top: 0px">
+			<h3>Queued works</h3>
+			<ul id="queuedWorks">
+				
+			</ul>
+		</div>
 	</div>
 
 	<div class="col-md-8">
 		<h3>Visual representation</h3>
-		<div style="height: 400px; border: 2px dotted black">
+		<div style="height: 400px; border: 2px dotted black;">
+			<!-- <div style="color: black; wi" -->
+			<img src="map_vn.png" style="width: 100%" id="wareHouseMap">
+			<img src="robot.png"  style="width: 6%; position: relative;" id="robotPosition">
+		</div>
 	</div>
 
 </div>
@@ -110,6 +114,50 @@
 </body>
 
 <script>
+	//
+	robotMove
+	var positionsOnMap = [
+		[39, 304],
+		[205, 301],
+		[205, 99],
+		[355, 301],
+		[355, 99],
+		[515, 301],
+		[515, 99],
+		[667, 301],
+		[667, 99],
+		[817, 301],
+		[817, 99],
+		[968, 301],
+		[968, 99],
+		[1131, 301]
+	];
+	positionsOnMap.forEach((item) =>{
+		item[0] /= 1192;
+		item[1] /= 446;
+	});
+	function robotMove(positionId){
+		var map = document.getElementById("wareHouseMap");
+		var mapWidth = map.clientWidth;
+		var mapHeight = map.clientHeight;
+		var robot = document.getElementById("robotPosition");
+		var robotWidth = robot.clientWidth;
+		var robotHeight = robot.clientHeight;
+
+		console.log(mapHeight);
+		console.log(mapWidth);
+
+		var calcTop = positionsOnMap[positionId][1] * mapHeight - mapHeight - robotHeight/2;
+		var calcLeft = positionsOnMap[positionId][0] * mapWidth - robotWidth/2;
+
+		console.log(calcTop);
+		console.log(calcLeft);
+
+		robot.style.top = calcTop;
+		robot.style.left = calcLeft;
+	}
+	robotMove(0);
+	
 	$("#tempReq").slider({});
 	$("#lightReq").slider({});
 	Sortable.create(document.getElementById('queuedWorks'));
