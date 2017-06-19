@@ -58,13 +58,13 @@
 	      	<div class="modal-body">
 	        <form>
 			<div class="form-group">
-				<label for="itemId">Search by item name/item id</label>
+				<label for="itemId">Item id</label>
 				<input type="itemId" class="form-control" id="itemId"><br>
 			</div>
-				<h4>Candidate list</h4>
+				<!-- <h4>Candidate list</h4>
 				<div class="col-sx-12" style="height: 180px; border: 2px dotted black;">
 					Searching...
-				</div>
+				</div> -->
 
 			</form>
 			</div>
@@ -85,10 +85,10 @@
 		<div class="col-md-12" style="border: 2px dotted black;">
 			<h3>In progress</h3>
 			<ul id="inProgressWorks">
-				<li><a href="#">1. Store Golfball at (175,75)</a></li>
+				<!-- <li><a href="#">1. Store Golfball at (175,75)</a></li>
 				<li><a href="#">2. Retrieve 'Coffe cup' from (275,75)</a></li>
 				<li><a href="#">3. Retrieve 'Headphones' from (175,125)</a></li>
-				<li><a href="#">4. Retrieve 'Notepad' from (375,75)</a></li>
+				<li><a href="#">4. Retrieve 'Notepad' from (375,75)</a></li> -->
 			</ul>
 		</div>
 		<div class="col-md-12" style="border: 2px dotted black; border-top: 0px">
@@ -101,7 +101,7 @@
 
 	<div class="col-md-8">
 		<h3>Visual representation</h3>
-		<div style="height: 400px; border: 2px dotted black;">
+		<div style="border: 2px dotted black;" id = "visualRepresentation">
 			<!-- <div style="color: black; wi" -->
 			<img src="map_vn.png" style="width: 100%" id="wareHouseMap">
 			<img src="robot.png"  style="width: 6%; position: relative;" id="robotPosition">
@@ -115,53 +115,41 @@
 
 <script>
 	//
-	robotMove
+	var mapWidth = 1192;
+	var mapLength = 400;
 	var positionsOnMap = [
-		[163, 121],
-		[163, 305],
-		[294, 121],
-		[294, 305],
-		[423, 121],
-		[423, 305],
-		[552, 121],
-		[552, 305],
-		[680, 121],
-		[680, 305],
-		[813, 121],
-		[813, 305],
-		[944, 121],
-		[944, 305],
+		[213, 238],
+		[393, 238],
+		[585, 238],
+		[777, 238],
+		[963, 238],
 	];
 	positionsOnMap.forEach((item) =>{
-		item[0] /= 1124;
-		item[1] /= 416;
+		item[0] /= mapWidth;
+		item[1] /= mapLength;
 	});
 	function robotMove(positionId){
-		var map = document.getElementById("wareHouseMap");
-		var mapWidth = map.clientWidth;
-		var mapHeight = map.clientHeight;
+		var vi = document.getElementById("visualRepresentation");
+		vi.style.height = vi.clientWidth / mapWidth * mapLength;
 		var robot = document.getElementById("robotPosition");
-		var robotWidth = robot.clientWidth;
-		var robotHeight = robot.clientHeight;
 
-		console.log(mapHeight);
-		console.log(mapWidth);
+		var robotWidthScale = robot.style.width.split('%')[0]/100;
+		var robotHeightScale = robotWidthScale * 50/38 * mapWidth/mapLength;
 
-		var calcTop = positionsOnMap[positionId][1] * mapHeight - mapHeight - robotHeight/2;
-		var calcLeft = positionsOnMap[positionId][0] * mapWidth - robotWidth/2;
+		var calcTop = positionsOnMap[positionId][1]  - robotHeightScale/2 - 1;
+		var calcLeft = positionsOnMap[positionId][0] - robotWidthScale/2;
 
 		console.log(calcTop);
 		console.log(calcLeft);
 
-		robot.style.top = calcTop;
-		robot.style.left = calcLeft;
+		robot.style.top = calcTop * 100 + "%";
+		robot.style.left = calcLeft * 100 + "%";
 	}
 	robotMove(0);
 
 	$("#tempReq").slider({});
 	$("#lightReq").slider({});
 	Sortable.create(document.getElementById('queuedWorks'));
-
 
 	const serverAddress = 'ws://localhost:9000';
 	const server = new WebSocket(serverAddress);
@@ -205,6 +193,9 @@
 			_freeRobots--;
 		}
 
+		if(command == "robot"){
+
+		}
 
 	});
 
